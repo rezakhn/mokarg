@@ -2,9 +2,11 @@ import 'package:flutter/foundation.dart';
 import '../../../core/database_service.dart';
 import '../models/supplier.dart';
 import '../models/purchase_invoice.dart';
+import '../../../core/notifiers/inventory_sync_notifier.dart'; // Added import
 
 class PurchaseController with ChangeNotifier {
   final DatabaseService _dbService = DatabaseService();
+  final InventorySyncNotifier _inventorySyncNotifier; // Added field
 
   // Supplier State
   List<Supplier> _suppliers = [];
@@ -24,7 +26,7 @@ class PurchaseController with ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
-  PurchaseController() {
+  PurchaseController(this._inventorySyncNotifier) { // Updated constructor
     // Optionally load initial data
     // fetchSuppliers();
     // fetchPurchaseInvoices();
@@ -106,10 +108,10 @@ class PurchaseController with ChangeNotifier {
     try {
       await _dbService.deleteSupplier(id);
       await fetchSuppliers(); // Refresh list
+    // Also refresh invoices as some might have been deleted by cascade or prevented deletion
+    await fetchPurchaseInvoices();
       if (_selectedSupplier?.id == id) {
         _selectedSupplier = null;
-        // Also filter invoices if they were related to this supplier
-        _purchaseInvoices.removeWhere((invoice) => invoice.supplierId == id);
       }
       _setLoading(false);
       return true;
@@ -154,8 +156,8 @@ class PurchaseController with ChangeNotifier {
     try {
       await _dbService.insertPurchaseInvoice(invoice);
       await fetchPurchaseInvoices(); // Refresh list
-      // TODO: Trigger inventory update notification if necessary
       _setLoading(false);
+      _inventorySyncNotifier.notifyInventoryChanged(); // Notify inventory change
       return true;
     } catch (e) {
       _setError('Failed to add purchase invoice: ${e.toString()}');
@@ -187,8 +189,8 @@ class PurchaseController with ChangeNotifier {
       if (_selectedPurchaseInvoice?.id == invoice.id) {
          _selectedPurchaseInvoice = await _dbService.getPurchaseInvoiceById(invoice.id!);
       }
-      // TODO: Trigger inventory update notification if necessary
       _setLoading(false);
+      _inventorySyncNotifier.notifyInventoryChanged(); // Notify inventory change
       return true;
     } catch (e) {
       _setError('Failed to update purchase invoice: ${e.toString()}');
@@ -206,8 +208,8 @@ class PurchaseController with ChangeNotifier {
       if (_selectedPurchaseInvoice?.id == id) {
         _selectedPurchaseInvoice = null;
       }
-      // TODO: Trigger inventory update notification if necessary
       _setLoading(false);
+      _inventorySyncNotifier.notifyInventoryChanged(); // Notify inventory change
       return true;
     } catch (e) {
       _setError('Failed to delete purchase invoice: ${e.toString()}');

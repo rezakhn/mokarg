@@ -1,9 +1,11 @@
 import 'package:flutter/foundation.dart';
 import '../../../core/database_service.dart';
 import '../models/inventory_item.dart';
+import '../../../core/notifiers/inventory_sync_notifier.dart';
 
 class InventoryController with ChangeNotifier {
   final DatabaseService _dbService = DatabaseService();
+  final InventorySyncNotifier _inventorySyncNotifier;
 
   List<InventoryItem> _inventoryItems = [];
   List<InventoryItem> get inventoryItems => _inventoryItems;
@@ -20,9 +22,20 @@ class InventoryController with ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
-  InventoryController() {
+  InventoryController(this._inventorySyncNotifier) {
+    _inventorySyncNotifier.addListener(_handleInventorySync);
     // Optionally fetch items on initialization
     // fetchInventoryItems();
+  }
+
+  void _handleInventorySync() {
+    fetchInventoryItems();
+  }
+
+  @override
+  void dispose() {
+    _inventorySyncNotifier.removeListener(_handleInventorySync);
+    super.dispose();
   }
 
   void _setLoading(bool loading) {
