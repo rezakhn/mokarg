@@ -1,90 +1,117 @@
-import 'package:flutter/foundation.dart';
-import '../../../core/database_service.dart';
-import '../models/part.dart';
-import '../models/part_composition.dart';
-import '../models/product.dart';
-import '../models/product_part.dart';
-import '../models/assembly_order.dart';
-import '../../inventory/models/inventory_item.dart'; // For checking stock
+import 'package:flutter/foundation.dart'; // برای استفاده از ChangeNotifier
+import '../../../core/database_service.dart'; // سرویس پایگاه داده
+import '../models/part.dart'; // مدل قطعه
+import '../models/part_composition.dart'; // مدل ترکیب قطعه
+import '../models/product.dart'; // مدل محصول
+import '../models/product_part.dart'; // مدل قطعه محصول
+import '../models/assembly_order.dart'; // مدل سفارش مونتاژ
+import '../../inventory/models/inventory_item.dart'; // برای بررسی موجودی انبار
+import '../../../core/notifiers/inventory_sync_notifier.dart'; // Import InventorySyncNotifier
 
+// کنترلر برای مدیریت داده ها و منطق مربوط به قطعات، محصولات و سفارشات مونتاژ
 class PartController with ChangeNotifier {
-  final DatabaseService _dbService = DatabaseService();
+  final DatabaseService _dbService = DatabaseService(); // نمونه ای از سرویس پایگاه داده
+  final InventorySyncNotifier _inventorySyncNotifier; // Add InventorySyncNotifier field
 
-  // Part State
-  List<Part> _parts = [];
-  List<Part> get parts => _parts;
-  List<Part> _rawMaterials = []; // Filtered list for components
-  List<Part> get rawMaterials => _rawMaterials;
-  List<Part> _assemblies = []; // Filtered list for assemblies
-  List<Part> get assemblies => _assemblies;
-  Part? _selectedPart;
-  Part? get selectedPart => _selectedPart;
-  List<PartComposition> _selectedPartComposition = [];
-  List<PartComposition> get selectedPartComposition => _selectedPartComposition;
-  // For displaying component names in composition list
+  // --- State مربوط به قطعات ---
+  List<Part> _parts = []; // لیست خصوصی همه قطعات
+  List<Part> get parts => _parts; // گتر عمومی برای همه قطعات
+
+  List<Part> _rawMaterials = []; // لیست فیلتر شده برای مواد خام/اجزاء اولیه
+  List<Part> get rawMaterials => _rawMaterials; // گتر عمومی برای مواد خام
+
+  List<Part> _assemblies = []; // لیست فیلتر شده برای مجموعه های مونتاژی
+  List<Part> get assemblies => _assemblies; // گتر عمومی برای مجموعه های مونتاژی
+
+  Part? _selectedPart; // قطعه انتخاب شده فعلی
+  Part? get selectedPart => _selectedPart; // گتر عمومی برای قطعه انتخاب شده
+
+  List<PartComposition> _selectedPartComposition = []; // لیست اجزای تشکیل دهنده قطعه مونتاژی انتخاب شده
+  List<PartComposition> get selectedPartComposition => _selectedPartComposition; // گتر عمومی
+
+  // نقشه برای نگهداری نام قطعات بر اساس شناسه آنها (برای نمایش نام اجزاء در لیست ترکیب)
   Map<int, String> _partIdToNameMap = {};
   Map<int, String> get partIdToNameMap => _partIdToNameMap;
 
 
-  // Product State
-  List<Product> _products = [];
-  List<Product> get products => _products;
-  Product? _selectedProduct;
-  Product? get selectedProduct => _selectedProduct;
-  List<ProductPart> _selectedProductParts = [];
-  List<ProductPart> get selectedProductParts => _selectedProductParts;
+  // --- State مربوط به محصولات ---
+  List<Product> _products = []; // لیست خصوصی محصولات
+  List<Product> get products => _products; // گتر عمومی برای محصولات
 
-  // Assembly Order State
-  List<AssemblyOrder> _assemblyOrders = [];
-  List<AssemblyOrder> get assemblyOrders => _assemblyOrders;
-  AssemblyOrder? _selectedAssemblyOrder;
-  AssemblyOrder? get selectedAssemblyOrder => _selectedAssemblyOrder;
-  List<InventoryItem> _requiredComponentsStock = []; // For displaying stock of components for an assembly order
+  Product? _selectedProduct; // محصول انتخاب شده فعلی
+  Product? get selectedProduct => _selectedProduct; // گتر عمومی برای محصول انتخاب شده
+
+  List<ProductPart> _selectedProductParts = []; // لیست قطعات تشکیل دهنده محصول انتخاب شده
+  List<ProductPart> get selectedProductParts => _selectedProductParts; // گتر عمومی
+
+
+  // --- State مربوط به سفارشات مونتاژ ---
+  List<AssemblyOrder> _assemblyOrders = []; // لیست خصوصی سفارشات مونتاژ
+  List<AssemblyOrder> get assemblyOrders => _assemblyOrders; // گتر عمومی برای سفارشات مونتاژ
+
+  AssemblyOrder? _selectedAssemblyOrder; // سفارش مونتاژ انتخاب شده فعلی
+  AssemblyOrder? get selectedAssemblyOrder => _selectedAssemblyOrder; // گتر عمومی
+
+  // لیست برای نگهداری موجودی انبار اجزای مورد نیاز برای یک سفارش مونتاژ انتخاب شده
+  List<InventoryItem> _requiredComponentsStock = [];
   List<InventoryItem> get requiredComponentsStock => _requiredComponentsStock;
 
 
-  // Common State
-  bool _isLoading = false;
-  bool get isLoading => _isLoading;
-  String? _errorMessage;
-  String? get errorMessage => _errorMessage;
+  // --- State مشترک ---
+  bool _isLoading = false; // وضعیت بارگذاری اطلاعات
+  bool get isLoading => _isLoading; // گتر عمومی برای وضعیت بارگذاری
 
-  PartController() {
-    // Initial data fetch can be done here or triggered by UI
+  String? _errorMessage; // پیام خطا در صورت بروز مشکل
+  String? get errorMessage => _errorMessage; // گتر عمومی برای پیام خطا
+
+  // سازنده کنترلر
+  PartController(this._inventorySyncNotifier) { // Modify constructor
+    // واکشی داده های اولیه می تواند اینجا انجام شود یا توسط UI فراخوانی شود
   }
 
+  // متد خصوصی برای تنظیم وضعیت بارگذاری و اطلاع رسانی به شنوندگان
   void _setLoading(bool loading) {
     _isLoading = loading;
-    notifyListeners();
+    notifyListeners(); // اطلاع رسانی به ویجت ها برای به روزرسانی UI
   }
 
+  // متد خصوصی برای تنظیم پیام خطا و اطلاع رسانی به شنوندگان
   void _setError(String? message) {
     _errorMessage = message;
     notifyListeners();
   }
 
+  // متد خصوصی برای به روزرسانی نقشه نام قطعات بر اساس شناسه
+  // این نقشه برای نمایش نام قطعات در لیست های ترکیب استفاده می شود
   Future<void> _updatePartIdToNameMap(List<Part> partsList) async {
     _partIdToNameMap = {for (var p in partsList) p.id!: p.name};
+    // notifyListeners(); // معمولا نیازی به این نیست چون این متد داخلی است و در ادامه fetchParts فراخوانی می شود
   }
 
-  // --- Part Methods ---
+  // --- متدهای مربوط به قطعات ---
+
+  // واکشی لیست همه قطعات از پایگاه داده
+  // قابلیت جستجو بر اساس نام قطعه (query)
+  // همچنین لیست های مواد خام (_rawMaterials) و مجموعه های مونتاژی (_assemblies) را به روز می کند
+  // و نقشه _partIdToNameMap را نیز برای استفاده های بعدی به روز می کند
   Future<void> fetchParts({String? query}) async {
     _setLoading(true);
     _setError(null);
     try {
-      _parts = await _dbService.getParts(query: query);
-      _rawMaterials = _parts.where((p) => !p.isAssembly).toList();
-      _assemblies = _parts.where((p) => p.isAssembly).toList();
-      await _updatePartIdToNameMap(_parts);
+      _parts = await _dbService.getParts(query: query); // دریافت همه قطعات
+      _rawMaterials = _parts.where((p) => !p.isAssembly).toList(); // فیلتر مواد خام
+      _assemblies = _parts.where((p) => p.isAssembly).toList(); // فیلتر مجموعه های مونتاژی
+      await _updatePartIdToNameMap(_parts); // به روزرسانی نقشه شناسه به نام
     } catch (e) {
-      _setError('Failed to load parts: ${e.toString()}');
-      _parts = []; _rawMaterials = []; _assemblies = [];
+      _setError('بارگیری لیست قطعات با شکست مواجه شد: ${e.toString()}');
+      _parts = []; _rawMaterials = []; _assemblies = []; // خالی کردن لیست ها در صورت خطا
     }
     _setLoading(false);
   }
 
+  // دریافت یک قطعه خاص بر اساس شناسه آن
+  // این متد بیشتر برای استفاده داخلی است یا در صورتی که نیاز به واکشی مستقیم باشد
   Future<Part?> getPartById(int id) async {
-    // Primarily for internal use or direct fetching if needed
     _setLoading(true);
     _setError(null);
     try {
@@ -92,77 +119,94 @@ class PartController with ChangeNotifier {
       _setLoading(false);
       return part;
     } catch (e) {
-      _setError('Failed to get part: ${e.toString()}');
+      _setError('دریافت اطلاعات قطعه با شکست مواجه شد: ${e.toString()}');
       _setLoading(false);
       return null;
     }
   }
 
+  // افزودن یک قطعه جدید
   Future<bool> addPart(Part part) async {
     _setLoading(true);
     _setError(null);
     try {
-      await _dbService.insertPart(part);
-      await fetchParts(); // Refresh list
+      await _dbService.insertPart(part); // درج قطعه در پایگاه داده
+      await fetchParts(); // واکشی مجدد لیست قطعات برای به روزرسانی
       _setLoading(false);
-      return true;
+      return true; // عملیات موفقیت آمیز بود
     } catch (e) {
-      _setError('Failed to add part (name might already exist): ${e.toString()}');
+      // معمولا به دلیل تکراری بودن نام قطعه رخ می دهد (unique constraint)
+      _setError('افزودن قطعه با شکست مواجه شد (ممکن است نام تکراری باشد): ${e.toString()}');
       _setLoading(false);
-      return false;
+      return false; // عملیات ناموفق بود
     }
   }
 
+  // به روزرسانی اطلاعات یک قطعه موجود
+  // اگر قطعه مونتاژی باشد و لیست اجزاء (componentsToSet) نیز ارائه شده باشد، اجزاء آن نیز به روز می شوند
   Future<bool> updatePart(Part part, {List<PartComposition>? componentsToSet}) async {
     _setLoading(true);
     _setError(null);
     try {
-      await _dbService.updatePart(part);
+      await _dbService.updatePart(part); // به روزرسانی قطعه اصلی
+      // اگر قطعه مونتاژی است و لیست اجزاء جدید مشخص شده، آنها را تنظیم کن
       if (part.isAssembly && componentsToSet != null) {
         await _dbService.setAssemblyComponents(part.id!, componentsToSet);
       }
-      await fetchParts(); // Refresh list
+      await fetchParts(); // واکشی مجدد لیست قطعات
+      // اگر قطعه به روز شده همان قطعه انتخاب شده فعلی است، آن را مجددا انتخاب کن تا اجزایش نیز به روز شوند
       if (_selectedPart?.id == part.id) {
-        await selectPart(part.id!); // Reselect to refresh compositions
+        await selectPart(part.id!);
       }
       _setLoading(false);
       return true;
     } catch (e) {
-      _setError('Failed to update part (name might already exist): ${e.toString()}');
+      _setError('به روزرسانی قطعه با شکست مواجه شد (ممکن است نام تکراری باشد): ${e.toString()}');
       _setLoading(false);
       return false;
     }
   }
 
+  // حذف یک قطعه بر اساس شناسه
   Future<bool> deletePart(int id) async {
     _setLoading(true);
     _setError(null);
     try {
-      await _dbService.deletePart(id);
-      await fetchParts(); // Refresh list
-      if (_selectedPart?.id == id) _selectedPart = null; _selectedPartComposition = [];
+      await _dbService.deletePart(id); // حذف قطعه از پایگاه داده
+      await fetchParts(); // واکشی مجدد لیست قطعات
+      // اگر قطعه حذف شده، قطعه انتخاب شده فعلی بود، آن را از انتخاب خارج کن
+      if (_selectedPart?.id == id) {
+        _selectedPart = null;
+        _selectedPartComposition = []; // لیست اجزاء آن را نیز خالی کن
+      }
       _setLoading(false);
       return true;
     } catch (e) {
-      _setError('Failed to delete part (it might be in use): ${e.toString()}');
+      // معمولا به این دلیل است که قطعه در جای دیگری استفاده شده (مثلا در ترکیب محصول یا سفارش مونتاژ)
+      _setError('حذف قطعه با شکست مواجه شد (ممکن است در حال استفاده باشد): ${e.toString()}');
       _setLoading(false);
       return false;
     }
   }
 
+  // انتخاب یک قطعه و در صورت مونتاژی بودن، واکشی اجزای تشکیل دهنده آن
   Future<void> selectPart(int partId) async {
+    // یافتن قطعه از لیست موجود یا null در صورت عدم وجود
     _selectedPart = _parts.firstWhere((p) => p.id == partId, orElse: () => null as Part?);
     if (_selectedPart != null && _selectedPart!.isAssembly) {
+      // اگر قطعه انتخاب شده مونتاژی است، اجزای آن را واکشی کن
       await fetchComponentsForSelectedAssembly();
     } else {
+      // در غیر این صورت (قطعه خام یا null)، لیست اجزاء را خالی کن
       _selectedPartComposition = [];
     }
-    notifyListeners();
+    notifyListeners(); // اطلاع رسانی برای به روزرسانی UI
   }
 
+  // واکشی اجزای تشکیل دهنده برای قطعه مونتاژی انتخاب شده فعلی (_selectedPart)
   Future<void> fetchComponentsForSelectedAssembly() async {
     if (_selectedPart == null || !_selectedPart!.isAssembly) {
-      _selectedPartComposition = [];
+      _selectedPartComposition = []; // اگر قطعه ای انتخاب نشده یا مونتاژی نیست، لیست اجزاء خالی است
       notifyListeners();
       return;
     }
@@ -171,111 +215,127 @@ class PartController with ChangeNotifier {
     try {
       _selectedPartComposition = await _dbService.getComponentsForAssembly(_selectedPart!.id!);
     } catch (e) {
-      _setError('Failed to load components: ${e.toString()}');
-      _selectedPartComposition = [];
+      _setError('بارگیری اجزای تشکیل دهنده با شکست مواجه شد: ${e.toString()}');
+      _selectedPartComposition = []; // خالی کردن لیست در صورت خطا
     }
-    _setLoading(false); // Notifies listeners
+    _setLoading(false); // با notifyListeners در داخل _setLoading
   }
 
-  // For managing components of _selectedPart if it's an assembly
+  // تنظیم (بازنویسی) اجزای تشکیل دهنده برای قطعه مونتاژی انتخاب شده فعلی
   Future<bool> setComponentsForSelectedAssembly(List<PartComposition> components) async {
     if (_selectedPart == null || !_selectedPart!.isAssembly) {
-      _setError("No assembly selected or selected part is not an assembly.");
+      _setError("هیچ مجموعه مونتاژی انتخاب نشده یا قطعه انتخاب شده مونتاژی نیست.");
       return false;
     }
     _setLoading(true);
     _setError(null);
     try {
-      await _dbService.setAssemblyComponents(_selectedPart!.id!, components);
-      await fetchComponentsForSelectedAssembly(); // Refresh
+      await _dbService.setAssemblyComponents(_selectedPart!.id!, components); // تنظیم اجزاء در پایگاه داده
+      await fetchComponentsForSelectedAssembly(); // واکشی مجدد برای به روزرسانی لیست محلی
       _setLoading(false);
       return true;
     } catch (e) {
-      _setError('Failed to set components: ${e.toString()}');
+      _setError('تنظیم اجزای تشکیل دهنده با شکست مواجه شد: ${e.toString()}');
       _setLoading(false);
       return false;
     }
   }
 
+  // --- متدهای مربوط به محصولات ---
 
-  // --- Product Methods ---
+  // واکشی لیست همه محصولات از پایگاه داده
+  // قابلیت جستجو بر اساس نام محصول (query)
   Future<void> fetchProducts({String? query}) async {
     _setLoading(true);
     _setError(null);
     try {
-      _products = await _dbService.getProducts(query: query);
+      _products = await _dbService.getProducts(query: query); // دریافت محصولات از سرویس پایگاه داده
     } catch (e) {
-      _setError('Failed to load products: ${e.toString()}');
-      _products = [];
+      _setError('بارگیری لیست محصولات با شکست مواجه شد: ${e.toString()}');
+      _products = []; // خالی کردن لیست در صورت خطا
     }
     _setLoading(false);
   }
 
+  // افزودن یک محصول جدید
   Future<bool> addProduct(Product product) async {
     _setLoading(true);
     _setError(null);
     try {
-      await _dbService.insertProduct(product);
-      await fetchProducts(); // Refresh
+      await _dbService.insertProduct(product); // درج محصول در پایگاه داده
+      await fetchProducts(); // واکشی مجدد لیست محصولات برای به روزرسانی
       _setLoading(false);
-      return true;
+      return true; // عملیات موفقیت آمیز بود
     } catch (e) {
-      _setError('Failed to add product (name might already exist): ${e.toString()}');
+      // معمولا به دلیل تکراری بودن نام محصول رخ می دهد
+      _setError('افزودن محصول با شکست مواجه شد (ممکن است نام تکراری باشد): ${e.toString()}');
       _setLoading(false);
-      return false;
+      return false; // عملیات ناموفق بود
     }
   }
 
+  // به روزرسانی اطلاعات یک محصول موجود
+  // اگر لیست قطعات (partsToSet) نیز ارائه شده باشد، قطعات تشکیل دهنده محصول نیز به روز می شوند
   Future<bool> updateProduct(Product product, {List<ProductPart>? partsToSet}) async {
     _setLoading(true);
     _setError(null);
     try {
-      await _dbService.updateProduct(product);
+      await _dbService.updateProduct(product); // به روزرسانی محصول اصلی
+      // اگر لیست قطعات جدید مشخص شده، آنها را تنظیم کن
       if (partsToSet != null) {
         await _dbService.setProductParts(product.id!, partsToSet);
       }
-      await fetchProducts(); // Refresh
+      await fetchProducts(); // واکشی مجدد لیست محصولات
+      // اگر محصول به روز شده همان محصول انتخاب شده فعلی است، آن را مجددا انتخاب کن تا قطعاتش نیز به روز شوند
       if (_selectedProduct?.id == product.id) {
-        await selectProduct(product.id!); // Reselect to refresh parts
+        await selectProduct(product.id!);
       }
       _setLoading(false);
       return true;
     } catch (e) {
-      _setError('Failed to update product (name might already exist): ${e.toString()}');
+      _setError('به روزرسانی محصول با شکست مواجه شد (ممکن است نام تکراری باشد): ${e.toString()}');
       _setLoading(false);
       return false;
     }
   }
 
+  // حذف یک محصول بر اساس شناسه
   Future<bool> deleteProduct(int id) async {
     _setLoading(true);
     _setError(null);
     try {
-      await _dbService.deleteProduct(id);
-      await fetchProducts(); // Refresh
-      if (_selectedProduct?.id == id) _selectedProduct = null; _selectedProductParts = [];
+      await _dbService.deleteProduct(id); // حذف محصول از پایگاه داده
+      await fetchProducts(); // واکشی مجدد لیست محصولات
+      // اگر محصول حذف شده، محصول انتخاب شده فعلی بود، آن را از انتخاب خارج کن
+      if (_selectedProduct?.id == id) {
+        _selectedProduct = null;
+        _selectedProductParts = []; // لیست قطعات آن را نیز خالی کن
+      }
       _setLoading(false);
       return true;
     } catch (e) {
-      _setError('Failed to delete product: ${e.toString()}');
+      _setError('حذف محصول با شکست مواجه شد: ${e.toString()}');
       _setLoading(false);
       return false;
     }
   }
 
+  // انتخاب یک محصول و واکشی قطعات تشکیل دهنده آن
   Future<void> selectProduct(int productId) async {
     _selectedProduct = _products.firstWhere((p) => p.id == productId, orElse: () => null as Product?);
     if (_selectedProduct != null) {
+      // اگر محصولی انتخاب شده، قطعات تشکیل دهنده آن را واکشی کن
       await fetchPartsForSelectedProduct();
     } else {
-      _selectedProductParts = [];
+      _selectedProductParts = []; // در غیر این صورت، لیست قطعات را خالی کن
     }
-    notifyListeners();
+    notifyListeners(); // اطلاع رسانی برای به روزرسانی UI
   }
 
+  // واکشی قطعات تشکیل دهنده برای محصول انتخاب شده فعلی (_selectedProduct)
   Future<void> fetchPartsForSelectedProduct() async {
     if (_selectedProduct == null) {
-      _selectedProductParts = [];
+      _selectedProductParts = []; // اگر محصولی انتخاب نشده، لیست قطعات خالی است
       notifyListeners();
       return;
     }
@@ -284,31 +344,32 @@ class PartController with ChangeNotifier {
     try {
       _selectedProductParts = await _dbService.getPartsForProduct(_selectedProduct!.id!);
     } catch (e) {
-      _setError('Failed to load product parts: ${e.toString()}');
-      _selectedProductParts = [];
+      _setError('بارگیری قطعات محصول با شکست مواجه شد: ${e.toString()}');
+      _selectedProductParts = []; // خالی کردن لیست در صورت خطا
     }
-    _setLoading(false); // Notifies listeners
+    _setLoading(false); // با notifyListeners در داخل _setLoading
   }
 
+  // تنظیم (بازنویسی) قطعات تشکیل دهنده برای محصول انتخاب شده فعلی
   Future<bool> setPartsForSelectedProduct(List<ProductPart> productParts) async {
     if (_selectedProduct == null) {
-      _setError("No product selected.");
+      _setError("هیچ محصولی انتخاب نشده است.");
       return false;
     }
     _setLoading(true);
     _setError(null);
     try {
-      await _dbService.setProductParts(_selectedProduct!.id!, productParts);
-      await fetchPartsForSelectedProduct(); // Refresh
+      await _dbService.setProductParts(_selectedProduct!.id!, productParts); // تنظیم قطعات در پایگاه داده
+      await fetchPartsForSelectedProduct(); // واکشی مجدد برای به روزرسانی لیست محلی
       _setLoading(false);
       return true;
     } catch (e) {
-      _setError('Failed to set product parts: ${e.toString()}');
+      _setError('تنظیم قطعات محصول با شکست مواجه شد: ${e.toString()}');
       _setLoading(false);
       return false;
     }
   }
-
+  // ... (بقیه متدها در مراحل بعدی کامنت گذاری خواهند شد) ...
   // --- Assembly Order Methods ---
   Future<void> fetchAssemblyOrders({String? status}) async {
     _setLoading(true);
@@ -428,7 +489,7 @@ class PartController with ChangeNotifier {
       } else {
          await fetchAssemblyOrders(); // Full refresh if single fetch fails
       }
-      // TODO: Consider refreshing inventory views if they are active
+      _inventorySyncNotifier.notifyInventoryChanged(); // Notify inventory change
       _setLoading(false);
       return true;
     } catch (e) {

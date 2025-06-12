@@ -1,22 +1,25 @@
+// مدل داده ای برای نمایش اطلاعات عملکرد یک کارمند در یک دوره گزارش
 class EmployeePerformanceData {
-  final int employeeId;
-  final String employeeName;
-  final int totalDaysWorked;       // Applicable for daily-paid employees
-  final double totalHoursWorked;    // Applicable for hourly-paid, regular hours
-  final double totalOvertimeHours;  // Applicable for all
-  final double totalSalaryPaid;     // Calculated for the period
-  final int workLogEntryCount;     // Number of distinct work log entries
+  final int employeeId; // شناسه کارمند
+  final String employeeName; // نام کارمند
+  final int totalDaysWorked;       // مجموع روزهای کارکرد (مربوط به کارمندان روزمزد)
+  final double totalHoursWorked;    // مجموع ساعات کارکرد عادی (مربوط به کارمندان ساعتی)
+  final double totalOvertimeHours;  // مجموع ساعات اضافه کاری (مربوط به همه کارمندان)
+  final double totalSalaryPaid;     // مجموع حقوق پرداخت شده برای دوره گزارش
+  final int workLogEntryCount;     // تعداد رکوردهای گزارش کار ثبت شده برای کارمند
 
+  // سازنده کلاس EmployeePerformanceData
   EmployeePerformanceData({
-    required this.employeeId,
-    required this.employeeName,
-    this.totalDaysWorked = 0,
-    this.totalHoursWorked = 0.0,
-    this.totalOvertimeHours = 0.0,
-    required this.totalSalaryPaid,
-    this.workLogEntryCount = 0,
+    required this.employeeId, // شناسه کارمند الزامی است
+    required this.employeeName, // نام کارمند الزامی است
+    this.totalDaysWorked = 0, // مقدار پیش فرض برای روزهای کارکرد
+    this.totalHoursWorked = 0.0, // مقدار پیش فرض برای ساعات کارکرد
+    this.totalOvertimeHours = 0.0, // مقدار پیش فرض برای ساعات اضافه کاری
+    required this.totalSalaryPaid, // مجموع حقوق پرداخت شده الزامی است
+    this.workLogEntryCount = 0, // مقدار پیش فرض برای تعداد رکوردهای گزارش کار
   });
 
+  // بازنمایی رشته ای از شی EmployeePerformanceData برای چاپ و اشکال زدایی
   @override
   String toString() {
     return 'EmployeePerformanceData(employee: $employeeName, daysWorked: $totalDaysWorked, hoursWorked: $totalHoursWorked, overtime: $totalOvertimeHours, salary: $totalSalaryPaid, entries: $workLogEntryCount)';

@@ -1,24 +1,27 @@
+// مدل داده ای برای نمایش اطلاعات یک رکورد پشتیبان گیری
 class BackupInfo {
-  final int? id;
-  final DateTime backupDate;
-  final String filePath;
-  final int? fileSize; // in bytes
-  final String? status; // e.g., "Success", "Failed"
-  final String? notes;  // User or system notes
+  final int? id; // شناسه یکتای رکورد پشتیبان گیری در پایگاه داده (اختیاری)
+  final DateTime backupDate; // تاریخ و زمان انجام پشتیبان گیری
+  final String filePath; // مسیر فایل پشتیبان ذخیره شده
+  final int? fileSize; // اندازه فایل پشتیبان به بایت (اختیاری)
+  final String? status; // وضعیت پشتیبان گیری، به عنوان مثال: "Success" (موفق)، "Failed" (ناموفق) (اختیاری)
+  final String? notes;  // یادداشت های کاربر یا سیستم مربوط به این پشتیبان گیری (اختیاری)
 
+  // سازنده کلاس BackupInfo
   BackupInfo({
     this.id,
-    required this.backupDate,
-    required this.filePath,
-    this.fileSize,
-    this.status,
-    this.notes,
+    required this.backupDate, // تاریخ پشتیبان گیری الزامی است
+    required this.filePath, // مسیر فایل الزامی است
+    this.fileSize, // اندازه فایل اختیاری است
+    this.status, // وضعیت اختیاری است
+    this.notes, // یادداشت ها اختیاری هستند
   });
 
+  // تبدیل شی BackupInfo به یک نقشه (Map) برای ذخیره سازی در پایگاه داده
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      // Store dates as ISO8601 strings (YYYY-MM-DD HH:MM:SS.SSS) for SQLite
+      // ذخیره تاریخ و زمان به صورت رشته ISO8601 (YYYY-MM-DD HH:MM:SS.SSS) برای سازگاری با SQLite
       'backup_date': backupDate.toIso8601String(),
       'file_path': filePath,
       'file_size': fileSize,
@@ -27,17 +30,19 @@ class BackupInfo {
     };
   }
 
+  // ایجاد یک شی BackupInfo از یک نقشه (Map) که از پایگاه داده خوانده شده است
   factory BackupInfo.fromMap(Map<String, dynamic> map) {
     return BackupInfo(
       id: map['id'],
-      backupDate: DateTime.parse(map['backup_date']),
+      backupDate: DateTime.parse(map['backup_date']), // تبدیل رشته تاریخ به DateTime
       filePath: map['file_path'],
-      fileSize: map['file_size'],
+      fileSize: map['file_size'], // ممکن است null باشد اگر در دیتابیس ذخیره نشده
       status: map['status'],
       notes: map['notes'],
     );
   }
 
+  // بازنمایی رشته ای از شی BackupInfo برای چاپ و اشکال زدایی
   @override
   String toString() {
     return 'BackupInfo{id: $id, date: $backupDate, path: $filePath, size: $fileSize, status: $status}';

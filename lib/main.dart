@@ -44,8 +44,8 @@ class MyApp extends StatelessWidget {
           create: (context) => PurchaseController(context.read<InventorySyncNotifier>()),
         ),
         // فراهم کننده کنترلر قطعات
-        ChangeNotifierProvider(
-          create: (_) => PartController(),
+        ChangeNotifierProvider<PartController>( // Updated PartController
+          create: (context) => PartController(context.read<InventorySyncNotifier>()),
         ),
         // فراهم کننده کنترلر سفارشات
         ChangeNotifierProvider(

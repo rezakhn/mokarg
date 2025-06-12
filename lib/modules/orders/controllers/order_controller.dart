@@ -1,199 +1,244 @@
-import 'package:flutter/foundation.dart';
-import '../../../core/database_service.dart';
-import '../models/customer.dart';
-import '../models/sales_order.dart';
-import '../models/order_item.dart';
-import '../models/payment.dart';
-import '../../parts/models/product.dart'; // For fetching product list for orders
-import '../../parts/models/part.dart';    // For checking component part details
-import '../../inventory/models/inventory_item.dart'; // For checking stock
+import 'package:flutter/foundation.dart'; // برای استفاده از ChangeNotifier
+import '../../../core/database_service.dart'; // سرویس پایگاه داده
+import '../models/customer.dart'; // مدل مشتری
+import '../models/sales_order.dart'; // مدل سفارش فروش
+import '../models/order_item.dart'; // مدل آیتم سفارش
+import '../models/payment.dart'; // مدل پرداخت
+import '../../parts/models/product.dart'; // برای واکشی لیست محصولات جهت استفاده در سفارشات
+import '../../parts/models/part.dart';    // برای بررسی جزئیات قطعات تشکیل دهنده (در بررسی موجودی)
+import '../../inventory/models/inventory_item.dart'; // برای بررسی موجودی انبار
 
+// کنترلر برای مدیریت داده ها و منطق مربوط به مشتریان، سفارشات فروش و پرداخت ها
 class OrderController with ChangeNotifier {
-  final DatabaseService _dbService = DatabaseService();
+  final DatabaseService _dbService = DatabaseService(); // نمونه ای از سرویس پایگاه داده
 
-  // Customer State
-  List<Customer> _customers = [];
-  List<Customer> get customers => _customers;
-  Customer? _selectedCustomer;
-  Customer? get selectedCustomer => _selectedCustomer;
+  // --- State مربوط به مشتریان ---
+  List<Customer> _customers = []; // لیست خصوصی مشتریان
+  List<Customer> get customers => _customers; // گتر عمومی برای لیست مشتریان
+  Customer? _selectedCustomer; // مشتری انتخاب شده فعلی
+  Customer? get selectedCustomer => _selectedCustomer; // گتر عمومی برای مشتری انتخاب شده
 
-  // Sales Order State
-  List<SalesOrder> _salesOrders = [];
-  List<SalesOrder> get salesOrders => _salesOrders;
-  SalesOrder? _selectedSalesOrder; // Includes items and payments when fully loaded
-  SalesOrder? get selectedSalesOrder => _selectedSalesOrder;
+  // --- State مربوط به سفارشات فروش ---
+  List<SalesOrder> _salesOrders = []; // لیست خصوصی سفارشات فروش
+  List<SalesOrder> get salesOrders => _salesOrders; // گتر عمومی برای لیست سفارشات فروش
+  SalesOrder? _selectedSalesOrder; // سفارش فروش انتخاب شده فعلی (شامل آیتم ها و پرداخت ها پس از بارگذاری کامل)
+  SalesOrder? get selectedSalesOrder => _selectedSalesOrder; // گتر عمومی
 
-  // Product list for populating order item choices
+  // لیست محصولات موجود برای انتخاب در آیتم های سفارش
   List<Product> _availableProducts = [];
   List<Product> get availableProducts => _availableProducts;
-  Map<int, String> _productIdToNameMap = {}; // For display
+  // نقشه برای نگهداری نام محصولات بر اساس شناسه آنها (برای نمایش)
+  Map<int, String> _productIdToNameMap = {};
   Map<int, String> get productIdToNameMap => _productIdToNameMap;
 
-
-  // Availability/Shortage Info for selected order
-  Map<String, double> _itemShortages = {}; // Key: Part Name, Value: Shortage Quantity
+  // اطلاعات مربوط به در دسترس بودن / کمبود آیتم ها برای سفارش انتخاب شده
+  Map<String, double> _itemShortages = {}; // کلید: نام قطعه/محصول، مقدار: مقدار کمبود
   Map<String, double> get itemShortages => _itemShortages;
-  bool _isCheckingStock = false;
+  bool _isCheckingStock = false; // آیا در حال بررسی موجودی هستیم؟
   bool get isCheckingStock => _isCheckingStock;
 
+  // --- State مشترک ---
+  bool _isLoading = false; // وضعیت بارگذاری اطلاعات
+  bool get isLoading => _isLoading; // گتر عمومی برای وضعیت بارگذاری
+  String? _errorMessage; // پیام خطا در صورت بروز مشکل
+  String? get errorMessage => _errorMessage; // گتر عمومی برای پیام خطا
 
-  // Common State
-  bool _isLoading = false;
-  bool get isLoading => _isLoading;
-  String? _errorMessage;
-  String? get errorMessage => _errorMessage;
-
+  // سازنده کنترلر
   OrderController() {
-    // Initial data fetch can be done here or triggered by UI
+    // واکشی داده های اولیه می تواند اینجا انجام شود یا توسط UI فراخوانی شود
+    // fetchCustomers();
+    // fetchAvailableProducts();
   }
 
+  // متد خصوصی برای تنظیم وضعیت بارگذاری و اطلاع رسانی به شنوندگان
   void _setLoading(bool loading) {
     _isLoading = loading;
-    notifyListeners();
+    notifyListeners(); // اطلاع رسانی به ویجت ها برای به روزرسانی UI
   }
 
+  // متد خصوصی برای تنظیم پیام خطا و اطلاع رسانی به شنوندگان
   void _setError(String? message) {
     _errorMessage = message;
     notifyListeners();
   }
 
+  // متد خصوصی برای به روزرسانی نقشه نام محصولات بر اساس شناسه
   Future<void> _updateProductIdToNameMap(List<Product> productsList) async {
     _productIdToNameMap = {for (var p in productsList) p.id!: p.name};
   }
 
-  // --- Customer Methods ---
+  // --- متدهای مربوط به مشتریان ---
+
+  // واکشی لیست مشتریان از پایگاه داده
+  // قابلیت جستجو بر اساس نام مشتری (query)
   Future<void> fetchCustomers({String? query}) async {
     _setLoading(true); _setError(null);
     try {
-      _customers = await _dbService.getCustomers(query: query);
+      _customers = await _dbService.getCustomers(query: query); // دریافت مشتریان از سرویس پایگاه داده
     } catch (e) {
-      _setError('Failed to load customers: ${e.toString()}'); _customers = [];
+      _setError('بارگیری لیست مشتریان با شکست مواجه شد: ${e.toString()}');
+      _customers = []; // خالی کردن لیست در صورت خطا
     }
     _setLoading(false);
   }
 
+  // افزودن یک مشتری جدید
   Future<bool> addCustomer(Customer customer) async {
     _setLoading(true); _setError(null);
     try {
-      await _dbService.insertCustomer(customer);
-      await fetchCustomers();
-      _setLoading(false); return true;
+      await _dbService.insertCustomer(customer); // درج مشتری در پایگاه داده
+      await fetchCustomers(); // واکشی مجدد لیست مشتریان برای به روزرسانی
+      _setLoading(false); return true; // عملیات موفقیت آمیز بود
     } catch (e) {
-      _setError('Failed to add customer: ${e.toString()}'); _setLoading(false); return false;
+      _setError('افزودن مشتری با شکست مواجه شد: ${e.toString()}');
+      _setLoading(false); return false; // عملیات ناموفق بود
     }
   }
 
+  // به روزرسانی اطلاعات یک مشتری موجود
   Future<bool> updateCustomer(Customer customer) async {
     _setLoading(true); _setError(null);
     try {
-      await _dbService.updateCustomer(customer);
-      await fetchCustomers();
+      await _dbService.updateCustomer(customer); // به روزرسانی مشتری در پایگاه داده
+      await fetchCustomers(); // واکشی مجدد لیست مشتریان
+      // اگر مشتری به روز شده همان مشتری انتخاب شده فعلی است، اطلاعات آن را نیز به روز کن
       if (_selectedCustomer?.id == customer.id) _selectedCustomer = customer;
       _setLoading(false); return true;
     } catch (e) {
-      _setError('Failed to update customer: ${e.toString()}'); _setLoading(false); return false;
-    }
-  }
-
-  Future<bool> deleteCustomer(int id) async {
-    _setLoading(true); _setError(null);
-    try {
-      await _dbService.deleteCustomer(id);
-      await fetchCustomers();
-      if (_selectedCustomer?.id == id) _selectedCustomer = null;
-      // Also remove/filter sales orders associated with this customer if desired, or let DB restrict
-      _salesOrders.removeWhere((order) => order.customerId == id);
-      _setLoading(false); return true;
-    } catch (e) {
-      _setError('Failed to delete customer (may have existing orders): ${e.toString()}');
+      _setError('به روزرسانی مشتری با شکست مواجه شد: ${e.toString()}');
       _setLoading(false); return false;
     }
   }
 
-  void selectCustomer(Customer? customer){
-    _selectedCustomer = customer;
-    notifyListeners();
-  }
-
-  // --- Product List for Order Items ---
-  Future<void> fetchAvailableProducts() async {
-    // This could also come from PartController if it manages products,
-    // but direct fetch is fine for now.
+  // حذف یک مشتری بر اساس شناسه
+  Future<bool> deleteCustomer(int id) async {
     _setLoading(true); _setError(null);
     try {
-      _availableProducts = await _dbService.getProducts();
-      await _updateProductIdToNameMap(_availableProducts);
+      await _dbService.deleteCustomer(id); // حذف مشتری از پایگاه داده
+      await fetchCustomers(); // واکشی مجدد لیست مشتریان
+      if (_selectedCustomer?.id == id) _selectedCustomer = null; // اگر مشتری حذف شده انتخاب شده بود، آن را از انتخاب خارج کن
+      // همچنین سفارشات فروش مرتبط با این مشتری را از لیست محلی حذف کن یا اجازه بده پایگاه داده محدودیت را اعمال کند
+      // این کار از نمایش سفارشات بدون مشتری در UI جلوگیری می کند، اما باید با رفتار پایگاه داده (ON DELETE RESTRICT) هماهنگ باشد
+      _salesOrders.removeWhere((order) => order.customerId == id);
+      notifyListeners(); // برای اعمال تغییر در _salesOrders
+      _setLoading(false); return true;
     } catch (e) {
-      _setError('Failed to load available products: ${e.toString()}'); _availableProducts = [];
+      // معمولا به این دلیل است که مشتری سفارشات فروش موجود دارد
+      _setError('حذف مشتری با شکست مواجه شد (ممکن است سفارشات فعالی داشته باشد): ${e.toString()}');
+      _setLoading(false); return false;
+    }
+  }
+
+  // انتخاب یک مشتری
+  void selectCustomer(Customer? customer){
+    _selectedCustomer = customer;
+    notifyListeners(); // اطلاع رسانی برای به روزرسانی UI
+  }
+
+  // --- متدهای مربوط به لیست محصولات برای آیتم های سفارش ---
+
+  // واکشی لیست محصولات موجود برای انتخاب در آیتم های سفارش
+  // این محصولات از جدول محصولات (parts module) خوانده می شوند
+  Future<void> fetchAvailableProducts() async {
+    // این لیست می تواند از PartController نیز دریافت شود اگر آن کنترلر محصولات را مدیریت کند،
+    // اما واکشی مستقیم در اینجا نیز برای سادگی فعلی مناسب است.
+    _setLoading(true); _setError(null);
+    try {
+      _availableProducts = await _dbService.getProducts(); // دریافت همه محصولات
+      await _updateProductIdToNameMap(_availableProducts); // به روزرسانی نقشه شناسه به نام محصول
+    } catch (e) {
+      _setError('بارگیری لیست محصولات موجود با شکست مواجه شد: ${e.toString()}');
+      _availableProducts = [];
     }
     _setLoading(false);
   }
 
+  // --- متدهای مربوط به سفارشات فروش ---
 
-  // --- Sales Order Methods ---
+  // واکشی لیست سفارشات فروش از پایگاه داده
+  // قابلیت فیلتر بر اساس وضعیت سفارش (status) و شناسه مشتری (customerId)
   Future<void> fetchSalesOrders({String? status, int? customerId}) async {
     _setLoading(true); _setError(null);
     try {
       _salesOrders = await _dbService.getSalesOrders(status: status, customerId: customerId);
-      if(_availableProducts.isEmpty) await fetchAvailableProducts(); // Ensure product names are available
+      // اطمینان از اینکه نام محصولات برای نمایش در دسترس است
+      if(_availableProducts.isEmpty && _salesOrders.isNotEmpty) {
+          // اگر لیست محصولات موجود خالی است و سفارشاتی وجود دارد (که ممکن است نیاز به نمایش نام محصول داشته باشند)
+          // محصولات موجود را واکشی کن
+          await fetchAvailableProducts();
+      }
     } catch (e) {
-      _setError('Failed to load sales orders: ${e.toString()}'); _salesOrders = [];
+      _setError('بارگیری لیست سفارشات فروش با شکست مواجه شد: ${e.toString()}');
+      _salesOrders = []; // خالی کردن لیست در صورت خطا
     }
     _setLoading(false);
   }
 
+  // دریافت جزئیات کامل یک سفارش فروش بر اساس شناسه آن (شامل آیتم ها و پرداخت ها)
   Future<SalesOrder?> getFullSalesOrderDetails(int orderId) async {
     _setLoading(true); _setError(null);
     try {
-      final order = await _dbService.getSalesOrderById(orderId);
-      if (order != null && _availableProducts.isEmpty) await fetchAvailableProducts();
-       _setLoading(false);
+      final order = await _dbService.getSalesOrderById(orderId); // این متد از سرویس، آیتم ها و پرداخت ها را نیز واکشی می کند
+      // اگر سفارش دریافت شد و لیست محصولات موجود هنوز خالی است، آنها را واکشی کن
+      if (order != null && _availableProducts.isEmpty) {
+          await fetchAvailableProducts();
+      }
+      _setLoading(false);
       return order;
     } catch (e) {
-      _setError('Failed to load order details: ${e.toString()}');
+      _setError('بارگیری جزئیات سفارش با شکست مواجه شد: ${e.toString()}');
       _setLoading(false);
       return null;
     }
   }
 
-
+  // افزودن یک سفارش فروش جدید
   Future<bool> addSalesOrder(SalesOrder order) async {
     _setLoading(true); _setError(null);
     try {
-      // Items should already be part of the order object passed in
-      order.calculateTotalAmount();
-      await _dbService.insertSalesOrder(order);
-      await fetchSalesOrders(); // Refresh list
-      _setLoading(false); return true;
+      // فرض بر این است که آیتم ها از قبل بخشی از شیء order هستند که به این متد پاس داده می شود
+      order.calculateTotalAmount(); // محاسبه مبلغ کل سفارش بر اساس آیتم های آن
+      await _dbService.insertSalesOrder(order); // درج سفارش در پایگاه داده
+      await fetchSalesOrders(); // واکشی مجدد لیست سفارشات برای به روزرسانی
+      _setLoading(false); return true; // عملیات موفقیت آمیز بود
     } catch (e) {
-      _setError('Failed to add sales order: ${e.toString()}'); _setLoading(false); return false;
+      _setError('افزودن سفارش فروش با شکست مواجه شد: ${e.toString()}');
+      _setLoading(false); return false; // عملیات ناموفق بود
     }
   }
 
+  // به روزرسانی یک سفارش فروش موجود
   Future<bool> updateSalesOrder(SalesOrder order) async {
     _setLoading(true); _setError(null);
     try {
-      order.calculateTotalAmount();
-      await _dbService.updateSalesOrder(order);
-      await fetchSalesOrders(); // Refresh list
+      order.calculateTotalAmount(); // محاسبه مجدد مبلغ کل سفارش
+      await _dbService.updateSalesOrder(order); // به روزرسانی سفارش در پایگاه داده
+      await fetchSalesOrders(); // واکشی مجدد لیست سفارشات
+      // اگر سفارش به روز شده همان سفارش انتخاب شده فعلی است، اطلاعات آن را نیز به روز کن
       if (_selectedSalesOrder?.id == order.id) {
-        _selectedSalesOrder = await _dbService.getSalesOrderById(order.id!); // Refresh selected
+        _selectedSalesOrder = await _dbService.getSalesOrderById(order.id!); // واکشی مجدد برای دریافت آیتم ها و پرداخت های به روز شده
       }
       _setLoading(false); return true;
     } catch (e) {
-      _setError('Failed to update sales order: ${e.toString()}'); _setLoading(false); return false;
+      _setError('به روزرسانی سفارش فروش با شکست مواجه شد: ${e.toString()}');
+      _setLoading(false); return false;
     }
   }
 
+  // به روزرسانی وضعیت یک سفارش فروش
   Future<bool> updateSalesOrderStatus(int orderId, String newStatus) async {
     _setLoading(true); _setError(null);
     try {
-      await _dbService.updateSalesOrderStatus(orderId, newStatus);
-      // If completing, inventory is handled by completeSalesOrderAndUpdateInventory
+      // اگر وضعیت جدید "Completed" است، باید از طریق متد completeSelectedSalesOrder انجام شود
+      // تا موجودی انبار نیز به درستی به روز شود.
       if (newStatus == "Completed") {
-          return await completeSelectedSalesOrder(orderId, true); // Call the specific completion logic
+          // فراخوانی متد مخصوص تکمیل سفارش که موجودی را نیز مدیریت می کند
+          // پارامتر دوم (calledFromStatusUpdate) برای جلوگیری از حلقه بی نهایت یا خطای "already completed" است
+          return await completeSelectedSalesOrder(orderId, calledFromStatusUpdate: true);
       } else {
-        // For other status changes, just refresh data
+        // برای سایر تغییرات وضعیت، فقط وضعیت را در پایگاه داده به روز کن
+        await _dbService.updateSalesOrderStatus(orderId, newStatus);
+        // و اطلاعات سفارش را در لیست محلی و در صورت انتخاب بودن، به روز کن
         final updatedOrder = await _dbService.getSalesOrderById(orderId);
         if (updatedOrder != null) {
           int index = _salesOrders.indexWhere((o) => o.id == orderId);
@@ -203,39 +248,46 @@ class OrderController with ChangeNotifier {
       }
       _setLoading(false); return true;
     } catch (e) {
-      _setError('Failed to update order status: ${e.toString()}'); _setLoading(false); return false;
+      _setError('به روزرسانی وضعیت سفارش با شکست مواجه شد: ${e.toString()}');
+      _setLoading(false); return false;
     }
   }
 
-
+  // حذف یک سفارش فروش بر اساس شناسه
   Future<bool> deleteSalesOrder(int id) async {
     _setLoading(true); _setError(null);
     try {
-      await _dbService.deleteSalesOrder(id);
-      await fetchSalesOrders(); // Refresh list
+      await _dbService.deleteSalesOrder(id); // حذف سفارش از پایگاه داده (آیتم ها و پرداخت ها با CASCADE حذف می شوند)
+      await fetchSalesOrders(); // واکشی مجدد لیست سفارشات
+      // اگر سفارش حذف شده، سفارش انتخاب شده فعلی بود، آن را از انتخاب خارج کن
       if (_selectedSalesOrder?.id == id) _selectedSalesOrder = null;
       _setLoading(false); return true;
     } catch (e) {
-      _setError('Failed to delete sales order: ${e.toString()}'); _setLoading(false); return false;
+      _setError('حذف سفارش فروش با شکست مواجه شد: ${e.toString()}');
+      _setLoading(false); return false;
     }
   }
 
+  // انتخاب یک سفارش فروش و واکشی جزئیات کامل آن
   Future<void> selectSalesOrder(int orderId) async {
-    _setLoading(true); _setError(null); _itemShortages = {};
+    _setLoading(true); _setError(null);
+    _itemShortages = {}; // پاک کردن اطلاعات کمبود آیتم های قبلی
     try {
+      // واکشی سفارش به همراه آیتم ها و پرداخت های آن
       _selectedSalesOrder = await _dbService.getSalesOrderById(orderId);
       if (_selectedSalesOrder != null) {
+        // اگر لیست محصولات موجود خالی است، آن را واکشی کن (برای نمایش نام محصولات)
         if (_availableProducts.isEmpty) await fetchAvailableProducts();
-        // Optionally, immediately check stock for the selected order
+        // به صورت اختیاری، می توان بلافاصله موجودی آیتم های سفارش انتخاب شده را بررسی کرد
         // await checkStockForSelectedOrder();
       }
     } catch (e) {
-      _setError('Failed to load selected order: ${e.toString()}');
+      _setError('بارگیری سفارش انتخاب شده با شکست مواجه شد: ${e.toString()}');
       _selectedSalesOrder = null;
     }
-    _setLoading(false); // This will notify listeners
+    _setLoading(false); // این متد notifyListeners() را در داخل خود فراخوانی می کند
   }
-
+  // ... (بقیه متدها در مراحل بعدی کامنت گذاری خواهند شد) ...
   // --- Payment Methods ---
   Future<bool> addPayment(Payment payment) async {
     if (_selectedSalesOrder == null || payment.orderId != _selectedSalesOrder!.id) {
