@@ -1,81 +1,91 @@
-import 'package:flutter/foundation.dart';
-import '../../../core/database_service.dart';
-import '../models/inventory_item.dart';
-import '../../../core/notifiers/inventory_sync_notifier.dart';
+import 'package:flutter/foundation.dart'; // برای استفاده از ChangeNotifier
+import '../../../core/database_service.dart'; // سرویس پایگاه داده
+import '../models/inventory_item.dart'; // مدل آیتم موجودی
+import '../../../core/notifiers/inventory_sync_notifier.dart'; // اطلاع رسان همگام سازی موجودی
 
+// کنترلر برای مدیریت داده ها و منطق مربوط به موجودی کالا
 class InventoryController with ChangeNotifier {
-  final DatabaseService _dbService = DatabaseService();
-  final InventorySyncNotifier _inventorySyncNotifier;
+  final DatabaseService _dbService = DatabaseService(); // نمونه ای از سرویس پایگاه داده
+  final InventorySyncNotifier _inventorySyncNotifier; // نمونه ای از اطلاع رسان همگام سازی موجودی
 
-  List<InventoryItem> _inventoryItems = [];
-  List<InventoryItem> get inventoryItems => _inventoryItems;
+  List<InventoryItem> _inventoryItems = []; // لیست خصوصی آیتم های موجودی
+  List<InventoryItem> get inventoryItems => _inventoryItems; // گتر عمومی برای لیست آیتم های موجودی
 
-  List<InventoryItem> _lowStockItems = [];
-  List<InventoryItem> get lowStockItems => _lowStockItems;
+  List<InventoryItem> _lowStockItems = []; // لیست خصوصی آیتم های با موجودی کم (نیاز به سفارش)
+  List<InventoryItem> get lowStockItems => _lowStockItems; // گتر عمومی برای لیست آیتم های با موجودی کم
 
-  InventoryItem? _selectedInventoryItem;
-  InventoryItem? get selectedInventoryItem => _selectedInventoryItem;
+  InventoryItem? _selectedInventoryItem; // آیتم موجودی انتخاب شده فعلی
+  InventoryItem? get selectedInventoryItem => _selectedInventoryItem; // گتر عمومی برای آیتم موجودی انتخاب شده
 
-  bool _isLoading = false;
-  bool get isLoading => _isLoading;
+  bool _isLoading = false; // وضعیت بارگذاری اطلاعات
+  bool get isLoading => _isLoading; // گتر عمومی برای وضعیت بارگذاری
 
-  String? _errorMessage;
-  String? get errorMessage => _errorMessage;
+  String? _errorMessage; // پیام خطا در صورت بروز مشکل
+  String? get errorMessage => _errorMessage; // گتر عمومی برای پیام خطا
 
+  // سازنده کنترلر که اطلاع رسان همگام سازی موجودی را دریافت می کند
   InventoryController(this._inventorySyncNotifier) {
+    // افزودن شنونده به اطلاع رسان همگام سازی موجودی
+    // هرگاه تغییری در موجودی از بخش دیگری از برنامه اعلام شود، متد _handleInventorySync فراخوانی می شود
     _inventorySyncNotifier.addListener(_handleInventorySync);
-    // Optionally fetch items on initialization
+    // به صورت اختیاری می توان آیتم ها را هنگام مقداردهی اولیه کنترلر واکشی کرد
     // fetchInventoryItems();
   }
 
+  // متدی که هنگام دریافت اعلان از InventorySyncNotifier فراخوانی می شود
   void _handleInventorySync() {
-    fetchInventoryItems();
+    fetchInventoryItems(); // واکشی مجدد لیست آیتم های موجودی برای اطمینان از به روز بودن داده ها
   }
 
+  // این متد زمانی فراخوانی می شود که کنترلر از بین می رود (dispose)
+  // مهم است که شنونده ها در اینجا حذف شوند تا از نشت حافظه (memory leak) جلوگیری شود
   @override
   void dispose() {
-    _inventorySyncNotifier.removeListener(_handleInventorySync);
+    _inventorySyncNotifier.removeListener(_handleInventorySync); // حذف شنونده
     super.dispose();
   }
 
+  // متد خصوصی برای تنظیم وضعیت بارگذاری و اطلاع رسانی به شنوندگان
   void _setLoading(bool loading) {
     _isLoading = loading;
-    notifyListeners();
+    notifyListeners(); // اطلاع رسانی به ویجت ها برای به روزرسانی UI
   }
 
+  // متد خصوصی برای تنظیم پیام خطا و اطلاع رسانی به شنوندگان
   void _setError(String? message) {
     _errorMessage = message;
     notifyListeners();
   }
 
+  // واکشی لیست آیتم های موجودی از پایگاه داده
+  // قابلیت جستجو بر اساس نام آیتم (query)
   Future<void> fetchInventoryItems({String? query}) async {
     _setLoading(true);
     _setError(null);
     try {
-      // Assuming DatabaseService will have a method like getAllInventoryItems or similar
-      // For now, let's plan for a method that can take a query for item name.
-      // If query is null/empty, it should fetch all.
-      // This method is not yet defined in DatabaseService plan step, will add it there.
-      _inventoryItems = await _dbService.getAllInventoryItems(query: query);
-      _filterLowStockItems();
+      _inventoryItems = await _dbService.getAllInventoryItems(query: query); // دریافت آیتم ها از سرویس پایگاه داده
+      _filterLowStockItems(); // فیلتر کردن آیتم های با موجودی کم پس از واکشی
     } catch (e) {
-      _setError('Failed to load inventory items: ${e.toString()}');
-      _inventoryItems = [];
+      _setError('بارگیری لیست آیتم های موجودی با شکست مواجه شد: ${e.toString()}');
+      _inventoryItems = []; // اطمینان از خالی بودن لیست ها در صورت خطا
       _lowStockItems = [];
     }
     _setLoading(false);
   }
 
+  // متد خصوصی برای فیلتر کردن و جدا کردن آیتم هایی که مقدارشان از حد آستانه کمتر است
   void _filterLowStockItems() {
     _lowStockItems = _inventoryItems.where((item) => item.quantity < item.threshold).toList();
-    // No notifyListeners() here as it's called by the public methods that trigger this.
+    // در اینجا notifyListeners() فراخوانی نمی شود زیرا این متد توسط متدهای عمومی که خودشان notifyListeners() را صدا می زنند، فراخوانی می شود
   }
 
+  // انتخاب یک آیتم موجودی
   void selectInventoryItem(InventoryItem? item) {
     _selectedInventoryItem = item;
-    notifyListeners();
+    notifyListeners(); // اطلاع رسانی برای به روزرسانی UI
   }
 
+  // دریافت جزئیات یک آیتم موجودی خاص بر اساس نام آن
   Future<InventoryItem?> getInventoryItemDetails(String itemName) async {
     _setLoading(true);
     _setError(null);
@@ -84,54 +94,54 @@ class InventoryController with ChangeNotifier {
       _setLoading(false);
       return item;
     } catch (e) {
-       _setError('Failed to fetch item details: ${e.toString()}');
+       _setError('واکشی جزئیات آیتم با شکست مواجه شد: ${e.toString()}');
       _setLoading(false);
       return null;
     }
   }
 
-
+  // به روزرسانی حد آستانه (threshold) برای یک آیتم موجودی
   Future<bool> updateItemThreshold(String itemName, double newThreshold) async {
     _setLoading(true);
     _setError(null);
     try {
-      // DatabaseService needs a method for this: updateInventoryItemThreshold
-      await _dbService.updateInventoryItemThreshold(itemName, newThreshold);
-      // Refresh the specific item or the whole list
+      await _dbService.updateInventoryItemThreshold(itemName, newThreshold); // به روزرسانی در پایگاه داده
+      // به روزرسانی آیتم در لیست محلی یا واکشی مجدد کل لیست
       final index = _inventoryItems.indexWhere((item) => item.itemName == itemName);
       if (index != -1) {
-        // Fetch updated item to get potentially new quantity if other operations happened
+        // واکشی آیتم به روز شده برای دریافت مقدار جدید (ممکن است عملیات دیگری همزمان رخ داده باشد)
         final updatedItem = await _dbService.getInventoryItemByName(itemName);
         if(updatedItem != null){
-             _inventoryItems[index] = updatedItem;
+             _inventoryItems[index] = updatedItem; // جایگزینی آیتم در لیست
         } else {
-            _inventoryItems.removeAt(index); // Item might have been deleted by another process
+            // اگر آیتم پس از به روزرسانی دیگر وجود نداشت (مثلا توسط فرآیند دیگری حذف شده)
+            _inventoryItems.removeAt(index);
         }
       } else {
-        // If item was not in list (e.g. new item threshold set), fetch all
+        // اگر آیتم در لیست نبود (مثلا حد آستانه برای آیتم جدیدی تنظیم شده)، کل لیست را واکشی کن
         await fetchInventoryItems();
       }
-      _filterLowStockItems(); // Re-filter based on new threshold
+      _filterLowStockItems(); // فیلتر مجدد آیتم های با موجودی کم
       _setLoading(false);
-      // Update selected item if it's the one being changed
+      // به روزرسانی آیتم انتخاب شده اگر همان آیتمی است که تغییر کرده
       if (_selectedInventoryItem?.itemName == itemName) {
+          // استفاده از orElse برای جلوگیری از خطا در صورتی که آیتم دیگر در لیست نباشد
           _selectedInventoryItem = _inventoryItems.firstWhere((i) => i.itemName == itemName, orElse: () => null as InventoryItem?);
       }
-      notifyListeners(); // Ensure UI updates for selected item if necessary
+      notifyListeners(); // اطمینان از به روزرسانی UI برای آیتم انتخاب شده در صورت لزوم
       return true;
     } catch (e) {
-      _setError('Failed to update threshold for $itemName: ${e.toString()}');
+      _setError('به روزرسانی حد آستانه برای $itemName با شکست مواجه شد: ${e.toString()}');
       _setLoading(false);
       return false;
     }
   }
 
-  // If manual adjustment is ever needed (not in current plan for direct UI use):
+  // متد برای تنظیم دستی مقدار موجودی (در حال حاضر در برنامه استفاده نمی شود اما برای آینده ممکن است مفید باشد)
   // Future<bool> manuallyAdjustItemQuantity(String itemName, double newQuantity) async {
   //   _setLoading(true);
   //   _setError(null);
   //   try {
-  //     // DatabaseService needs a method for this
   //     await _dbService.manuallyAdjustInventoryItemQuantity(itemName, newQuantity);
   //     // Refresh item or list
   //     // ...
