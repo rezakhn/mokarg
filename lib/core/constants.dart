@@ -1,1 +1,7 @@
-// TODO: Add constants.dart content here
+// این فایل برای تعریف ثابت های سراسری برنامه در نظر گرفته شده است.
+// به عنوان مثال: کلیدهای API، مقادیر پیش فرض، نام مسیرها (routes) و غیره.
+// TODO: محتوای مربوط به ثابت ها در اینجا اضافه شود.
+
+// مثال:
+// const String appTitle = "مدیریت کارگاه";
+// const double defaultPadding = 16.0;

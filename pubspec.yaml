@@ -16,6 +16,7 @@ dependencies:
   pdf: ^3.0.0 # Ensure this is the version you intend, or use a more recent one like ^3.10.0
   path_provider: ^2.0.0 # Or latest version
   permission_handler: ^10.0.0 # Or latest version
+  path: ^1.8.0 # Added path package
 
 dev_dependencies:
   flutter_test:
