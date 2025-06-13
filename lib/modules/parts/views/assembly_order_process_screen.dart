@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../controllers/part_controller.dart';
-import '../models/assembly_order.dart';
 import '../models/part_composition.dart';
 import '../../inventory/models/inventory_item.dart'; // For displaying stock
 import '../../../core/database_service.dart'; // Import DatabaseService

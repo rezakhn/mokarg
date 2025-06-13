@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import '../controllers/part_controller.dart';
 import '../models/assembly_order.dart';
 import 'assembly_order_edit_screen.dart';

@@ -162,8 +162,8 @@ class _SalesOrderEditScreenState extends State<SalesOrderEditScreen> {
             TextFormField(controller: quantityController, decoration: InputDecoration(labelText: "Quantity"), keyboardType: TextInputType.number),
             TextFormField(controller: priceController, decoration: InputDecoration(labelText: "Price per Unit"), keyboardType: TextInputType.number),
           ]);
-        }), // <<< Missing comma here,
-        actions: [ // Added comma after StatefulBuilder
+        }),
+        actions: [
           TextButton(onPressed: ()=>Navigator.pop(dialogContext), child: Text("Cancel")),
           ElevatedButton(onPressed: (){
             if (selectedProduct != null && quantityController.text.isNotEmpty && priceController.text.isNotEmpty) {
