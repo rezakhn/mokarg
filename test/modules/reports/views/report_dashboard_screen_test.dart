@@ -7,7 +7,7 @@ import 'package:workshop_management_app/modules/reports/models/income_report_dat
 import 'package:workshop_management_app/modules/employees/controllers/employee_controller.dart'; // For employee dropdown
 import 'package:workshop_management_app/modules/employees/models/employee.dart';
 import 'package:workshop_management_app/modules/reports/models/employee_performance_data.dart'; // Added
-import 'package:workshop_management_app/modules/employees/models/work_log.dart'; // Added
+// Removed import for work_log.dart; assuming WorkLog might be in employee.dart or is otherwise missing.
 
 
 // Mock ReportController

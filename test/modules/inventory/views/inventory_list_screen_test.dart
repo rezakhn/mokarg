@@ -12,19 +12,24 @@ class MockInventoryController extends ChangeNotifier implements InventoryControl
   List<InventoryItem> _lowStock = [];
   bool _loading = false;
   String? _error;
+  InventoryItem? _selectedItem; // Field for the selected item
 
   @override List<InventoryItem> get inventoryItems => _items;
   @override List<InventoryItem> get lowStockItems => _lowStock;
   @override bool get isLoading => _loading;
   @override String? get errorMessage => _error;
+  @override InventoryItem? get selectedInventoryItem => _selectedItem; // Implementation for the getter
 
   // Other methods would need mocks if called by UI directly and we want to test those interactions.
   // For this test, we focus on what the UI consumes.
   @override Future<void> fetchInventoryItems({String? query}) async { /* Mock behavior */ }
   @override Future<bool> updateItemThreshold(String itemName, double newThreshold) async {return true;}
   // Add other method overrides if needed by UI interaction tests
-  @override void selectInventoryItem(InventoryItem? item) {}
-  @override Future<InventoryItem?> getInventoryItemDetails(String itemName) async {return null;}
+  @override void selectInventoryItem(InventoryItem? item) { _selectedItem = item; notifyListeners(); } // Implementation for the method
+  @override Future<InventoryItem?> getInventoryItemDetails(String itemName) async {
+    // Simple mock: return item if its name matches and it's in our test list
+    return _items.firstWhere((i) => i.itemName == itemName, orElse: () => null as InventoryItem?);
+  }
 
 
   // Test setup methods

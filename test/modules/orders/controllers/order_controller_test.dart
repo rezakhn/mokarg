@@ -10,6 +10,7 @@ import 'package:workshop_management_app/modules/parts/models/product.dart';
 import 'package:workshop_management_app/modules/parts/models/part.dart';
 import 'package:workshop_management_app/modules/parts/models/product_part.dart';
 import 'package:workshop_management_app/modules/inventory/models/inventory_item.dart';
+import 'package:sqflite/sqflite.dart'; // Added import for ConflictAlgorithm
 
 // Manual mock for DatabaseService (replace with generated mock if using build_runner)
 class MockDatabaseService extends Mock implements DatabaseService {}

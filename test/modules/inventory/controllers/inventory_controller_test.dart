@@ -3,6 +3,7 @@ import 'package:mockito/mockito.dart';
 import 'package:workshop_management_app/core/database_service.dart';
 import 'package:workshop_management_app/modules/inventory/controllers/inventory_controller.dart';
 import 'package:workshop_management_app/modules/inventory/models/inventory_item.dart';
+import 'package:sqflite/sqflite.dart'; // Added import for ConflictAlgorithm
 
 // Manual mock for DatabaseService
 class MockDatabaseService extends Mock implements DatabaseService {}
