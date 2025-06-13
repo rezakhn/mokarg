@@ -91,9 +91,50 @@ class DatabaseService {
   Future<void> manuallyAdjustInventoryItemQuantity(String itemName, double newAbsoluteQuantity, {double? newThreshold}) async { final db = await database; Map<String, dynamic> values = {'quantity': newAbsoluteQuantity}; if (newThreshold != null) { values['threshold'] = newThreshold; } final item = await getInventoryItemByName(itemName); if (item != null) { await db.update('inventory', values, where: 'item_name = ?', whereArgs: [itemName]); } else { values['item_name'] = itemName; values.putIfAbsent('threshold', () => 0.0); await db.insert('inventory', values); } }
   Future<void> _updateInventoryItemQuantityInternal(String itemName, double quantityChange, {required DatabaseExecutor txn, double? threshold}) async { final currentItem = await getInventoryItemByName(itemName, txn: txn); if (currentItem != null) { final newQuantity = currentItem.quantity + quantityChange; Map<String, dynamic> updateValues = {'quantity': newQuantity}; if (threshold != null) updateValues['threshold'] = threshold; await txn.update('inventory', updateValues, where: 'item_name = ?', whereArgs: [itemName]); } else { await txn.insert('inventory', {'item_name': itemName, 'quantity': quantityChange, 'threshold': threshold ?? 0.0}); } }
   Future<int> insertPurchaseInvoice(PurchaseInvoice invoice) async { final db = await database; return await db.transaction((txn) async { invoice.calculateTotalAmount(); int invoiceId = await txn.insert('purchase_invoices', invoice.toMap(), conflictAlgorithm: ConflictAlgorithm.replace); for (var item in invoice.items) { var itemMap = item.toMap(); itemMap['invoice_id'] = invoiceId; await txn.insert('purchase_items', itemMap, conflictAlgorithm: ConflictAlgorithm.replace); await _updateInventoryItemQuantityInternal(item.itemName, item.quantity, txn: txn); } return invoiceId; }); }
-  Future<List<PurchaseItem>> _getPurchaseItemsForInvoice(int invoiceId, {DatabaseExecutor? txn}) async { final db = txn ?? await database; final List<Map<String, dynamic>> maps = await db.query('purchase_items', where: 'invoice_id = ?', whereArgs: [invoiceId]); return List.generate(maps.length, (i) => PurchaseItem.fromMap(maps[i])); }
 
-  Future<List<PurchaseInvoice>> getPurchaseInvoices({DateTime? startDate, DateTime? endDate, int? supplierId}) async { final db = await database; String whereFinalClause = ""; List<dynamic> whereArgsFinal = []; if (supplierId != null) { whereFinalClause += (whereFinalClause.isNotEmpty ? " AND " : "") + "supplier_id = ?"; whereArgsFinal.add(supplierId); } if (startDate != null && endDate != null) { whereFinalClause += (whereFinalClause.isNotEmpty ? " AND " : "") + "date BETWEEN ? AND ?"; whereArgsFinal.add(startDate.toIso8601String().substring(0,10)); whereArgsFinal.add(endDate.toIso8601String().substring(0,10)); } else if (startDate != null) { whereFinalClause += (whereFinalClause.isNotEmpty ? " AND " : "") + "date >= ?"; whereArgsFinal.add(startDate.toIso8601String().substring(0,10)); } else if (endDate != null) { whereFinalClause += (whereFinalClause.isNotEmpty ? " AND " : "") + "date <= ?"; whereArgsFinal.add(endDate.toIso8601String().substring(0,10)); } final List<Map<String, dynamic>> invoiceMaps = await db.query('purchase_invoices', where: whereFinalClause.isNotEmpty ? whereFinalClause : null, whereArgs: whereArgsFinal.isNotEmpty ? whereArgsFinal : null, orderBy: 'date DESC'); List<PurchaseInvoice> invoices = []; for (var map in invoiceMaps) { List<PurchaseItem> items = await _getPurchaseItemsForInvoice(map['id'] as int); invoices.add(PurchaseInvoice.fromMap(map, items)); } return invoices; }
+  Future<List<PurchaseItem>> _getPurchaseItemsForInvoice(int invoiceId, {DatabaseExecutor? txn}) async {
+    final db = txn ?? await database;
+    final List<Map<String, dynamic>> maps = await db.query('purchase_items', where: 'invoice_id = ?', whereArgs: [invoiceId]);
+    return List.generate(maps.length, (i) => PurchaseItem.fromMap(maps[i]));
+  } // Ensuring this method is properly terminated and separated.
+
+  // Adding explicit newlines and checking structure for the following method.
+  Future<List<PurchaseInvoice>> getPurchaseInvoices({
+    DateTime? startDate,
+    DateTime? endDate,
+    int? supplierId
+  }) async {
+    final db = await database;
+    String whereFinalClause = "";
+    List<dynamic> whereArgsFinal = [];
+    if (supplierId != null) {
+      whereFinalClause += (whereFinalClause.isNotEmpty ? " AND " : "") + "supplier_id = ?";
+      whereArgsFinal.add(supplierId);
+    }
+    if (startDate != null && endDate != null) {
+      whereFinalClause += (whereFinalClause.isNotEmpty ? " AND " : "") + "date BETWEEN ? AND ?";
+      whereArgsFinal.add(startDate.toIso8601String().substring(0,10));
+      whereArgsFinal.add(endDate.toIso8601String().substring(0,10));
+    } else if (startDate != null) {
+      whereFinalClause += (whereFinalClause.isNotEmpty ? " AND " : "") + "date >= ?";
+      whereArgsFinal.add(startDate.toIso8601String().substring(0,10));
+    } else if (endDate != null) {
+      whereFinalClause += (whereFinalClause.isNotEmpty ? " AND " : "") + "date <= ?";
+      whereArgsFinal.add(endDate.toIso8601String().substring(0,10));
+    }
+    final List<Map<String, dynamic>> invoiceMaps = await db.query(
+      'purchase_invoices',
+      where: whereFinalClause.isNotEmpty ? whereFinalClause : null,
+      whereArgs: whereArgsFinal.isNotEmpty ? whereArgsFinal : null,
+      orderBy: 'date DESC'
+    );
+    List<PurchaseInvoice> invoices = [];
+    for (var map in invoiceMaps) {
+      List<PurchaseItem> items = await _getPurchaseItemsForInvoice(map['id'] as int);
+      invoices.add(PurchaseInvoice.fromMap(map, items));
+    }
+    return invoices;
+  }
   Future<PurchaseInvoice?> getPurchaseInvoiceById(int id) async { final db = await database; List<Map<String, dynamic>> maps = await db.query('purchase_invoices', where: 'id = ?', whereArgs: [id]); if (maps.isNotEmpty) { List<PurchaseItem> items = await _getPurchaseItemsForInvoice(id); return PurchaseInvoice.fromMap(maps.first, items); } return null; }
   Future<int> updatePurchaseInvoice(PurchaseInvoice invoice) async { final db = await database; return await db.transaction((txn) async { invoice.calculateTotalAmount(); List<PurchaseItem> oldItems = await _getPurchaseItemsForInvoice(invoice.id!, txn: txn); for (var oldItem in oldItems) { await _updateInventoryItemQuantityInternal(oldItem.itemName, -oldItem.quantity, txn: txn); } int count = await txn.update('purchase_invoices', invoice.toMap(), where: 'id = ?', whereArgs: [invoice.id], conflictAlgorithm: ConflictAlgorithm.replace); await txn.delete('purchase_items', where: 'invoice_id = ?', whereArgs: [invoice.id]); for (var item in invoice.items) { var itemMap = item.toMap(); itemMap['invoice_id'] = invoice.id; await txn.insert('purchase_items', itemMap, conflictAlgorithm: ConflictAlgorithm.replace); await _updateInventoryItemQuantityInternal(item.itemName, item.quantity, txn: txn); } return count; }); }
   Future<int> deletePurchaseInvoice(int id) async { final db = await database; return await db.transaction((txn) async { List<PurchaseItem> itemsToDelete = await _getPurchaseItemsForInvoice(id, txn: txn); for (var item in itemsToDelete) { await _updateInventoryItemQuantityInternal(item.itemName, -item.quantity, txn: txn); } return await txn.delete('purchase_invoices', where: 'id = ?', whereArgs: [id]); }); }
@@ -133,8 +174,16 @@ class DatabaseService {
   Future<int> updateSalesOrderStatus(int orderId, String status) async { final db = await database; return await db.update('sales_orders', {'status': status}, where: 'id = ?', whereArgs: [orderId]); }
   Future<int> deleteSalesOrder(int id) async { final db = await database; return await db.delete('sales_orders', where: 'id = ?', whereArgs: [id]); }
   Future<int> insertPayment(Payment payment) async { final db = await database; return await db.insert('payments', payment.toMap()); }
-  Future<List<Payment>> getPaymentsForOrder(int orderId) async { return _getPaymentsForSalesOrder(orderId); }
-  Future<int> deletePayment(int paymentId) async { final db = await database; return await db.delete('payments', where: 'id = ?', whereArgs: [paymentId]); }
+  Future<List<Payment>> getPaymentsForOrder(int orderId) async {
+    return _getPaymentsForSalesOrder(orderId);
+  }
+
+  Future<int> deletePayment(int paymentId) async {
+    final db = await database;
+    return await db.delete('payments', where: 'id = ?', whereArgs: [paymentId]);
+  }
+  // Ensuring clean separation and no hidden characters before the next method.
+
   Future<void> completeSalesOrderAndUpdateInventory(int salesOrderId) async { final db = await database; await db.transaction((txn) async { final order = await getSalesOrderById(salesOrderId); if (order == null) throw Exception('SalesOrder not found for completion.'); if (order.status == 'Completed') throw Exception('SalesOrder already completed.'); for (var item in order.items) { final product = await getProductById(item.productId, txn: txn); if (product == null) throw Exception('Product with ID ${item.productId} not found.'); final productParts = await getPartsForProduct(product.id!, txn: txn); if (productParts.isEmpty) { await _updateInventoryItemQuantityInternal(product.name, -item.quantity, txn: txn); } else { for (var productPart in productParts) { final partToConsume = await getPartById(productPart.partId, txn: txn); if (partToConsume == null) throw Exception('Part with ID ${productPart.partId} for product ${product.name} not found.'); final totalQuantityOfPartToConsume = productPart.quantity * item.quantity; await _updateInventoryItemQuantityInternal(partToConsume.name, -totalQuantityOfPartToConsume, txn: txn); } } } await txn.update('sales_orders', {'status': 'Completed'}, where: 'id = ?', whereArgs: [salesOrderId]); }); }
   Future<double> getSalesTotalInDateRange(DateTime start, DateTime end) async { final db = await database; final String startDateStr = start.toIso8601String().substring(0, 10); final String endDateStr = end.toIso8601String().substring(0, 10); final List<Map<String, dynamic>> result = await db.rawQuery( "SELECT SUM(total_amount) as total FROM sales_orders WHERE status = 'Completed' AND order_date BETWEEN ? AND ?", [startDateStr, endDateStr], ); if (result.isNotEmpty && result.first['total'] != null) { return (result.first['total'] as num).toDouble(); } return 0.0; }
   Future<double> getPurchaseTotalInDateRange(DateTime start, DateTime end) async { final db = await database; final String startDateStr = start.toIso8601String().substring(0, 10); final String endDateStr = end.toIso8601String().substring(0, 10); final List<Map<String, dynamic>> result = await db.rawQuery( "SELECT SUM(total_amount) as total FROM purchase_invoices WHERE date BETWEEN ? AND ?", [startDateStr, endDateStr], ); if (result.isNotEmpty && result.first['total'] != null) { return (result.first['total'] as num).toDouble(); } return 0.0; }

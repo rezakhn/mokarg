@@ -131,11 +131,11 @@ class AppTheme {
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
       ),
 
-      cardTheme: CardThemeData( // Corrected: CardTheme -> CardThemeData
+      cardTheme: CardThemeData( // Removed const temporarily to diagnose "isn't a class" error
         elevation: 1.5,
-        margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0), // Standardized margin
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)), // Softer radius
-        surfaceTintColor: Colors.transparent, // M3 fix if not using M3 surface tint
+        margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(12.0))), // Kept inner const
+        surfaceTintColor: Colors.transparent,
         color: _lightSurface,
       ),
 
@@ -152,7 +152,7 @@ class AppTheme {
 
       dialogTheme: DialogThemeData( // Corrected: DialogTheme -> DialogThemeData
         backgroundColor: _lightSurface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(12.0))), // Made const compatible
         titleTextStyle: _lightTextTheme.titleLarge?.copyWith(color: colorScheme.onSurface),
       ),
 

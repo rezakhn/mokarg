@@ -162,8 +162,8 @@ class _SalesOrderEditScreenState extends State<SalesOrderEditScreen> {
             TextFormField(controller: quantityController, decoration: InputDecoration(labelText: "Quantity"), keyboardType: TextInputType.number),
             TextFormField(controller: priceController, decoration: InputDecoration(labelText: "Price per Unit"), keyboardType: TextInputType.number),
           ]);
-        }),
-        actions: [
+        }), // <<< Missing comma here
+        actions: [ // Added comma after StatefulBuilder
           TextButton(onPressed: ()=>Navigator.pop(dialogContext), child: Text("Cancel")),
           ElevatedButton(onPressed: (){
             if (selectedProduct != null && quantityController.text.isNotEmpty && priceController.text.isNotEmpty) {
@@ -191,10 +191,27 @@ class _SalesOrderEditScreenState extends State<SalesOrderEditScreen> {
     if (widget.salesOrder == null) return SizedBox.shrink();
     final order = widget.salesOrder!;
 
+    // Calculate total paid
+    final double totalPaid = _currentPayments.fold<double>(0.0, (sum, p) => sum + p.amount);
+
+    // Calculate order total for outstanding calculation
+    // Ensure _selectedCustomerId and _orderDate are valid here.
+    // If this is for a new order and customer might not be selected, this could be an issue.
+    // However, _buildPaymentsSection is only shown if widget.salesOrder != null,
+    // implying _selectedCustomerId and _orderDate are from an existing order.
+    final tempOrderForOutstanding = SalesOrder(
+        customerId: _selectedCustomerId!, // Should be safe as widget.salesOrder is not null
+        orderDate: _orderDate,          // Should be safe
+        items: _currentOrderItems
+    );
+    tempOrderForOutstanding.calculateTotalAmount();
+    final double orderTotalForOutstanding = tempOrderForOutstanding.totalAmount;
+    final double outstandingAmount = orderTotalForOutstanding - totalPaid;
+
     return Column(children: [
       Text("Payments", style: Theme.of(context).textTheme.titleMedium),
       Text(
-        "Total Paid: ${_currentPayments.fold<double>(0.0, (sum, p) => sum + p.amount).toStringAsFixed(2)} / Outstanding: ${(SalesOrder(customerId: _selectedCustomerId ?? 0, orderDate: _orderDate, items: _currentOrderItems)..calculateTotalAmount()).totalAmount - _currentPayments.fold<double>(0.0, (sum, p) => sum + p.amount)).toStringAsFixed(2)}",
+        "Total Paid: ${totalPaid.toStringAsFixed(2)} / Outstanding: ${outstandingAmount.toStringAsFixed(2)}",
         style: TextStyle(fontWeight: FontWeight.bold)
       ),
        ListView.builder(
