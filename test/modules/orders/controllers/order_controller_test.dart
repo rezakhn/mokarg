@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/mockito.dart';
 import 'package:workshop_management_app/core/database_service.dart';
 import 'package:workshop_management_app/modules/orders/controllers/order_controller.dart';
 import 'package:workshop_management_app/modules/orders/models/customer.dart';
@@ -13,7 +12,7 @@ import 'package:workshop_management_app/modules/inventory/models/inventory_item.
 import 'package:sqflite/sqflite.dart'; // Added import for ConflictAlgorithm
 
 // Manual mock for DatabaseService (replace with generated mock if using build_runner)
-class MockDatabaseService extends Mock implements DatabaseService {}
+// class MockDatabaseService extends Mock implements DatabaseService {} // Removed as not used
 
 void main() {
   late OrderController orderController;

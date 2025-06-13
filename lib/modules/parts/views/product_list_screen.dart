@@ -33,7 +33,10 @@ class _ProductListScreenState extends State<ProductListScreen> {
                Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const ProductEditScreen()),
-              );
+              ).then((_) {
+                if (!mounted) return;
+                Provider.of<PartController>(context, listen: false).fetchProducts();
+              });
             },
           ),
         ],
@@ -59,7 +62,10 @@ class _ProductListScreenState extends State<ProductListScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => ProductEditScreen(product: product)),
-                  );
+                  ).then((_) {
+                    if (!mounted) return;
+                    Provider.of<PartController>(context, listen: false).fetchProducts();
+                  });
                 },
                 onDelete: () async {
                     final confirm = await showDialog<bool>(

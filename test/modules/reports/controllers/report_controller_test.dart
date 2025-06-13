@@ -1,9 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/mockito.dart';
 import 'package:workshop_management_app/core/database_service.dart';
 import 'package:workshop_management_app/modules/reports/controllers/report_controller.dart';
-import 'package:workshop_management_app/modules/reports/models/income_report_data.dart';
-import 'package:workshop_management_app/modules/reports/models/employee_performance_data.dart';
 import 'package:workshop_management_app/modules/employees/models/employee.dart';
 // Removed import for work_log.dart; assuming WorkLog might be in employee.dart or is otherwise missing.
 import 'package:workshop_management_app/modules/orders/models/sales_order.dart'; // For seeding
@@ -14,7 +11,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart'; // For test setup
 
 
 // Manual mock for DatabaseService
-class MockDatabaseService extends Mock implements DatabaseService {}
+// class MockDatabaseService extends Mock implements DatabaseService {} // Removed
 // If EmployeeController's salary method was used, it would need mocking too.
 
 // Initialize FFI for sqflite if running on host (non-Flutter environment)

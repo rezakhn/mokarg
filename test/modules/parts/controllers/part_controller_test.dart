@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/mockito.dart';
 import 'package:workshop_management_app/core/database_service.dart';
 import 'package:workshop_management_app/modules/parts/controllers/part_controller.dart';
 import 'package:workshop_management_app/modules/parts/models/part.dart';
@@ -11,7 +10,7 @@ import 'package:workshop_management_app/modules/inventory/models/inventory_item.
 import 'package:sqflite/sqflite.dart'; // Added import for ConflictAlgorithm
 
 // It's better to generate mocks, but for simplicity defining manually:
-class MockDatabaseService extends Mock implements DatabaseService {}
+// class MockDatabaseService extends Mock implements DatabaseService {} // Removed as not used
 
 void main() {
   late PartController partController;

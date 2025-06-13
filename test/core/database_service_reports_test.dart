@@ -24,7 +24,7 @@ void main() {
     // The schema creation is handled by the DatabaseService's `_createDB` via `_initDB`.
 
     // Explicitly open and create schema for test isolation
-    Database db = await databaseFactoryFfi.openDatabase(inMemoryDatabasePath,
+    await databaseFactoryFfi.openDatabase(inMemoryDatabasePath,
       options: OpenDatabaseOptions(
           version: 1,
           onCreate: (db, version) async {

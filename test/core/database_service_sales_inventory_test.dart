@@ -22,7 +22,7 @@ void main() {
   setUp(() async {
     dbService = DatabaseService();
     // Open new in-memory DB for each test and create schema
-    Database db = await databaseFactoryFfi.openDatabase(inMemoryDatabasePath, options: OpenDatabaseOptions(
+    await databaseFactoryFfi.openDatabase(inMemoryDatabasePath, options: OpenDatabaseOptions(
       version: 1,
       onCreate: (db, version) async {
         // Replicate _createDB to ensure all tables are present

@@ -46,7 +46,10 @@ class _PartListScreenState extends State<PartListScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => PartEditScreen(part: part)),
-                  ).then((_) => Provider.of<PartController>(context, listen: false).fetchParts());
+                  ).then((_) {
+                    if (!mounted) return;
+                    Provider.of<PartController>(context, listen: false).fetchParts();
+                  });
                 },
                 onDelete: () async {
                   final confirm = await showDialog<bool>(
@@ -86,7 +89,10 @@ class _PartListScreenState extends State<PartListScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const PartEditScreen()),
-            ).then((_) => Provider.of<PartController>(context, listen: false).fetchParts());
+            ).then((_) {
+              if (!mounted) return;
+              Provider.of<PartController>(context, listen: false).fetchParts();
+            });
           },
         ),
         // TODO: Consider adding buttons to navigate to ProductListScreen and AssemblyOrderListScreen from here

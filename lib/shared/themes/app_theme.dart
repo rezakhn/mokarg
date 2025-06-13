@@ -67,8 +67,8 @@ class AppTheme {
       fontFamily: null, // Use system default fonts
 
       textTheme: _lightTextTheme.apply(
-        bodyColor: colorScheme.onBackground, // Default color for body text
-        displayColor: colorScheme.onBackground, // Default color for display text
+        bodyColor: colorScheme.onSurface, // Default color for body text
+        displayColor: colorScheme.onSurface, // Default color for display text
         // You can override specific text styles' colors here if needed,
         // but usually, they should adapt based on where they are used (onPrimary, onSurface etc.)
       ),
@@ -169,22 +169,22 @@ class AppTheme {
 
       segmentedButtonTheme: SegmentedButtonThemeData(
         style: ButtonStyle(
-          // backgroundColor: MaterialStateProperty.resolveWith<Color?>((states) {
+          // backgroundColor: WidgetStateProperty.resolveWith<Color?>((states) {
           //   // Converted .withOpacity(0.12) to .withAlpha((0.12 * 255).round()) which is 31
-          //   if (states.contains(MaterialState.selected)) return colorScheme.primary.withAlpha(31);
+          //   if (states.contains(WidgetState.selected)) return colorScheme.primary.withAlpha(31);
           //   return null; // Use default for unselected
           // }),
-          foregroundColor: MaterialStateProperty.resolveWith<Color?>((states) {
-            if (states.contains(MaterialState.selected)) return colorScheme.primary;
+          foregroundColor: WidgetStateProperty.resolveWith<Color?>((states) {
+            if (states.contains(WidgetState.selected)) return colorScheme.primary;
             // Converted .withOpacity(0.6) to .withAlpha((0.6 * 255).round()) which is 153
             return colorScheme.onSurface.withAlpha(153);
           }),
-          iconColor: MaterialStateProperty.resolveWith<Color?>((states) {
-            if (states.contains(MaterialState.selected)) return colorScheme.primary;
+          iconColor: WidgetStateProperty.resolveWith<Color?>((states) {
+            if (states.contains(WidgetState.selected)) return colorScheme.primary;
             // Converted .withOpacity(0.6) to .withAlpha((0.6 * 255).round()) which is 153
             return colorScheme.onSurface.withAlpha(153);
           }),
-          textStyle: MaterialStateProperty.all(_lightTextTheme.labelMedium),
+          textStyle: WidgetStateProperty.all(_lightTextTheme.labelMedium),
         )
       ),
 

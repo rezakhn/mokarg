@@ -22,7 +22,7 @@ void main() {
     // This requires DatabaseService._createDB to be accessible or schema replicated.
     // For simplicity, we assume it's handled by DatabaseService's _initDB if it uses inMemoryDatabasePath for tests.
     // Or, we use a fresh in-memory DB and create tables manually here.
-    Database db = await openDatabase(inMemoryDatabasePath, version: 1, onCreate: (db, version) async {
+    await openDatabase(inMemoryDatabasePath, version: 1, onCreate: (db, version) async {
         await db.execute('PRAGMA foreign_keys = ON');
         await db.execute("CREATE TABLE parts(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, is_assembly INTEGER NOT NULL DEFAULT 0)");
         await db.execute("CREATE TABLE part_compositions(id INTEGER PRIMARY KEY AUTOINCREMENT, assembly_id INTEGER NOT NULL, component_part_id INTEGER NOT NULL, quantity REAL NOT NULL, FOREIGN KEY (assembly_id) REFERENCES parts (id) ON DELETE CASCADE, FOREIGN KEY (component_part_id) REFERENCES parts (id) ON DELETE RESTRICT)");

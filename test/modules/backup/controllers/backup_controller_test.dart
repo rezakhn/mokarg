@@ -1,16 +1,13 @@
-import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/mockito.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:workshop_management_app/core/database_service.dart';
 import 'package:workshop_management_app/modules/backup/controllers/backup_controller.dart';
-import 'package:workshop_management_app/modules/backup/services/backup_service.dart';
+// import 'package:workshop_management_app/modules/backup/services/backup_service.dart'; // BackupService type might be needed if mocks were used
 import 'package:workshop_management_app/modules/backup/models/backup_info.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart'; // For test setup
 
 // Mocks
-class MockBackupService extends Mock implements BackupService {}
-class MockDatabaseService extends Mock implements DatabaseService {}
+// class MockBackupService extends Mock implements BackupService {} // Not used due to integration style
+// class MockDatabaseService extends Mock implements DatabaseService {} // Not used
 // Mock Platform for testing permission requests if needed, though permission_handler handles it.
 
 // Initialize FFI for sqflite if running on host (non-Flutter environment)
@@ -35,7 +32,7 @@ void main() {
     // is now configured with sqflite_common_ffi, it will use an in-memory DB for tests.
     // We need to ensure the schema is created for each test group or test.
     final dbService = DatabaseService(); // This instance will also use in-memory DB
-    final db = await dbService.database; // Ensures _initDB and _createDB are called
+    await dbService.database; // Ensures _initDB and _createDB are called
 
     // Clear any existing backup history for test isolation
     await dbService.clearBackupHistory();
@@ -71,7 +68,7 @@ void main() {
       // We'll test the controller's interaction with DatabaseService part.
       // The actual file creation part is better tested in BackupService tests with path_provider mocking.
 
-      final initialHistoryCount = backupController.backupHistory.length;
+      // final initialHistoryCount = backupController.backupHistory.length; // Removed as its uses are commented out
 
       // We cannot easily mock the _backupService.createBackup() call without DI.
       // This test will attempt a real backup which might fail or work depending on test env.

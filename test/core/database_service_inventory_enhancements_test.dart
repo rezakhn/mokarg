@@ -15,7 +15,7 @@ void main() {
   setUp(() async {
     dbService = DatabaseService();
     // Use in-memory database, ensure schema is created
-    final db = await databaseFactoryFfi.openDatabase(inMemoryDatabasePath, options: OpenDatabaseOptions(
+    await databaseFactoryFfi.openDatabase(inMemoryDatabasePath, options: OpenDatabaseOptions(
       version: 1,
       onCreate: (db, version) async {
         await db.execute('PRAGMA foreign_keys = ON'); // Important

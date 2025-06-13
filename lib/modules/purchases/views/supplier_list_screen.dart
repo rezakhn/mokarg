@@ -43,7 +43,10 @@ class _SupplierListScreenState extends State<SupplierListScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => SupplierEditScreen(supplier: supplier))
-                ).then((_) => Provider.of<PurchaseController>(context, listen: false).fetchSuppliers());
+                ).then((_) {
+                  if (!mounted) return;
+                  Provider.of<PurchaseController>(context, listen: false).fetchSuppliers();
+                });
               },
               onDelete: () async {
                 final confirm = await showDialog<bool>(
@@ -82,7 +85,10 @@ class _SupplierListScreenState extends State<SupplierListScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const SupplierEditScreen())
-            ).then((_) => Provider.of<PurchaseController>(context, listen: false).fetchSuppliers());
+            ).then((_) {
+              if (!mounted) return;
+              Provider.of<PurchaseController>(context, listen: false).fetchSuppliers();
+            });
           }
         )
       ],

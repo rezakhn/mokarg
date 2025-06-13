@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import '../controllers/part_controller.dart';
 import '../models/assembly_order.dart';
 import 'assembly_order_edit_screen.dart';
@@ -36,7 +35,10 @@ class _AssemblyOrderListScreenState extends State<AssemblyOrderListScreen> {
                Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const AssemblyOrderEditScreen()),
-              ).then((_) => Provider.of<PartController>(context, listen: false).fetchAssemblyOrders()); // Refresh list after add/edit
+              ).then((_) {
+                if (!mounted) return;
+                Provider.of<PartController>(context, listen: false).fetchAssemblyOrders();
+              }); // Refresh list after add/edit
             },
           ),
         ],
@@ -65,7 +67,10 @@ class _AssemblyOrderListScreenState extends State<AssemblyOrderListScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => AssemblyOrderProcessScreen(orderId: order.id!)),
-                  ).then((_) => Provider.of<PartController>(context, listen: false).fetchAssemblyOrders());
+                  ).then((_) {
+                    if (!mounted) return;
+                    Provider.of<PartController>(context, listen: false).fetchAssemblyOrders();
+                  });
                 },
                 onDelete: order.status != 'Completed' ? () async {
                     final confirm = await showDialog<bool>(
@@ -94,7 +99,10 @@ class _AssemblyOrderListScreenState extends State<AssemblyOrderListScreen> {
                     Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) => AssemblyOrderEditScreen(order: order)),
-                    ).then((_) => Provider.of<PartController>(context, listen: false).fetchAssemblyOrders());
+                    ).then((_) {
+                      if (!mounted) return;
+                      Provider.of<PartController>(context, listen: false).fetchAssemblyOrders();
+                    });
                 } : null,
               );
             },

@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:workshop_management_app/shared/widgets/main_layout_scaffold.dart'; // Added
 import '../controllers/order_controller.dart';
 import '../models/customer.dart'; // Required for _getCustomerName
-// import '../models/sales_order.dart'; // Not directly used if card handles it
+import '../models/sales_order.dart'; // Not directly used if card handles it
 import 'sales_order_edit_screen.dart';
 import '../widgets/sales_order_card.dart';
 
@@ -61,7 +61,10 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> {
                   Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => SalesOrderEditScreen(salesOrder: order)),
-                ).then((_) => Provider.of<OrderController>(context, listen: false).fetchSalesOrders());
+                ).then((_) {
+                  if (!mounted) return;
+                  Provider.of<OrderController>(context, listen: false).fetchSalesOrders();
+                });
               },
               onDelete: (order.status != 'Completed' && order.status != 'Cancelled') ? () async {
                 final confirm = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(title: Text('Confirm Delete'), content: Text('Are you sure you want to delete Sales Order #${order.id}?'), actions: [TextButton(child: Text('Cancel'), onPressed: ()=>Navigator.pop(ctx, false)), TextButton(child: Text('Delete'), onPressed: ()=>Navigator.pop(ctx, true))]));
@@ -91,7 +94,10 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const SalesOrderEditScreen()),
-            ).then((_) => Provider.of<OrderController>(context, listen: false).fetchSalesOrders());
+            ).then((_) {
+              if (!mounted) return;
+              Provider.of<OrderController>(context, listen: false).fetchSalesOrders();
+            });
           },
         ),
       ],

@@ -17,7 +17,7 @@ void main() {
   sqfliteTestInit();
 
   late DatabaseService dbService;
-  late Database db; // For direct checks
+  // late Database db; // For direct checks - This instance was unused.
 
   setUp(() async {
     // Open an in-memory database for each test
@@ -25,7 +25,7 @@ void main() {
     // Ensure a fresh DB for each test by using a unique path or deleting if exists
     // For in-memory, just re-instantiating DatabaseService should get a fresh one if it closes DB properly
     // Or, explicitly open an in-memory database
-    db = await openDatabase(inMemoryDatabasePath, version: 1,
+    /*db = */await openDatabase(inMemoryDatabasePath, version: 1, // Assigning to db was removed
         onCreate: (db, version) async {
       // Manually call _createDB from DatabaseService to set up schema
       // This is a bit of a workaround. Ideally, DatabaseService would allow passing a DB factory or path.
