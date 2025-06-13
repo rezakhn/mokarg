@@ -45,7 +45,10 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => CustomerEditScreen(customer: customer)),
-                ).then((_) => Provider.of<OrderController>(context, listen: false).fetchCustomers());
+                ).then((_) {
+                  if (!mounted) return;
+                  Provider.of<OrderController>(context, listen: false).fetchCustomers();
+                });
               },
               onDelete: () async {
                 final confirm = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(title: Text('Confirm Delete'), content: Text('Are you sure you want to delete ${customer.name}? This may fail if the customer has existing sales orders.'), actions: [TextButton(child: Text('Cancel'), onPressed: ()=>Navigator.pop(ctx, false)), TextButton(child: Text('Delete'), onPressed: ()=>Navigator.pop(ctx, true))]));
@@ -75,7 +78,10 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const CustomerEditScreen()),
-            ).then((_) => Provider.of<OrderController>(context, listen: false).fetchCustomers());
+            ).then((_) {
+              if (!mounted) return;
+              Provider.of<OrderController>(context, listen: false).fetchCustomers();
+            });
           },
         ),
       ],

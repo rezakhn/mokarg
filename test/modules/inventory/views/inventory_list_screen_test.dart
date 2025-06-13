@@ -28,7 +28,7 @@ class MockInventoryController extends ChangeNotifier implements InventoryControl
   @override void selectInventoryItem(InventoryItem? item) { _selectedItem = item; notifyListeners(); } // Implementation for the method
   @override Future<InventoryItem?> getInventoryItemDetails(String itemName) async {
     // Simple mock: return item if its name matches and it's in our test list
-    return _items.firstWhere((i) => i.itemName == itemName, orElse: () => null as InventoryItem?);
+    return _items.firstWhere((i) => i.itemName == itemName, orElse: () => null);
   }
 
 

@@ -36,7 +36,10 @@ class _AssemblyOrderListScreenState extends State<AssemblyOrderListScreen> {
                Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const AssemblyOrderEditScreen()),
-              ).then((_) => Provider.of<PartController>(context, listen: false).fetchAssemblyOrders()); // Refresh list after add/edit
+              ).then((_) {
+                if (!mounted) return;
+                Provider.of<PartController>(context, listen: false).fetchAssemblyOrders();
+              }); // Refresh list after add/edit
             },
           ),
         ],
@@ -65,7 +68,10 @@ class _AssemblyOrderListScreenState extends State<AssemblyOrderListScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => AssemblyOrderProcessScreen(orderId: order.id!)),
-                  ).then((_) => Provider.of<PartController>(context, listen: false).fetchAssemblyOrders());
+                  ).then((_) {
+                    if (!mounted) return;
+                    Provider.of<PartController>(context, listen: false).fetchAssemblyOrders();
+                  });
                 },
                 onDelete: order.status != 'Completed' ? () async {
                     final confirm = await showDialog<bool>(
@@ -94,7 +100,10 @@ class _AssemblyOrderListScreenState extends State<AssemblyOrderListScreen> {
                     Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) => AssemblyOrderEditScreen(order: order)),
-                    ).then((_) => Provider.of<PartController>(context, listen: false).fetchAssemblyOrders());
+                    ).then((_) {
+                      if (!mounted) return;
+                      Provider.of<PartController>(context, listen: false).fetchAssemblyOrders();
+                    });
                 } : null,
               );
             },

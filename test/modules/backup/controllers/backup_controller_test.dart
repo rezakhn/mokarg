@@ -35,7 +35,7 @@ void main() {
     // is now configured with sqflite_common_ffi, it will use an in-memory DB for tests.
     // We need to ensure the schema is created for each test group or test.
     final dbService = DatabaseService(); // This instance will also use in-memory DB
-    final db = await dbService.database; // Ensures _initDB and _createDB are called
+    await dbService.database; // Ensures _initDB and _createDB are called
 
     // Clear any existing backup history for test isolation
     await dbService.clearBackupHistory();

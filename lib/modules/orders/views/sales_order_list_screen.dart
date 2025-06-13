@@ -61,7 +61,10 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> {
                   Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => SalesOrderEditScreen(salesOrder: order)),
-                ).then((_) => Provider.of<OrderController>(context, listen: false).fetchSalesOrders());
+                ).then((_) {
+                  if (!mounted) return;
+                  Provider.of<OrderController>(context, listen: false).fetchSalesOrders();
+                });
               },
               onDelete: (order.status != 'Completed' && order.status != 'Cancelled') ? () async {
                 final confirm = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(title: Text('Confirm Delete'), content: Text('Are you sure you want to delete Sales Order #${order.id}?'), actions: [TextButton(child: Text('Cancel'), onPressed: ()=>Navigator.pop(ctx, false)), TextButton(child: Text('Delete'), onPressed: ()=>Navigator.pop(ctx, true))]));
@@ -91,7 +94,10 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const SalesOrderEditScreen()),
-            ).then((_) => Provider.of<OrderController>(context, listen: false).fetchSalesOrders());
+            ).then((_) {
+              if (!mounted) return;
+              Provider.of<OrderController>(context, listen: false).fetchSalesOrders();
+            });
           },
         ),
       ],

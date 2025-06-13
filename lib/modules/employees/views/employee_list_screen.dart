@@ -53,7 +53,8 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
                   context,
                   MaterialPageRoute(builder: (context) => EmployeeEditScreen(employee: employee)),
                 ).then((_) {
-                    Provider.of<EmployeeController>(context, listen: false).fetchEmployees();
+                  if (!mounted) return;
+                  Provider.of<EmployeeController>(context, listen: false).fetchEmployees();
                 });
               },
               onDelete: () async {
@@ -101,6 +102,7 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
                   context,
                   MaterialPageRoute(builder: (context) => const EmployeeEditScreen()),
                 ).then((_) {
+                  if (!mounted) return;
                   Provider.of<EmployeeController>(context, listen: false).fetchEmployees();
                 });
             }

@@ -59,7 +59,10 @@ class _PurchaseInvoiceListScreenState extends State<PurchaseInvoiceListScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => PurchaseInvoiceEditScreen(invoice: invoice))
-                ).then((_) => Provider.of<PurchaseController>(context, listen: false).fetchPurchaseInvoices());
+                ).then((_) {
+                  if (!mounted) return;
+                  Provider.of<PurchaseController>(context, listen: false).fetchPurchaseInvoices();
+                });
               },
               onDelete: () async {
                 final confirm = await showDialog<bool>(
@@ -98,7 +101,10 @@ class _PurchaseInvoiceListScreenState extends State<PurchaseInvoiceListScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const PurchaseInvoiceEditScreen())
-            ).then((_) => Provider.of<PurchaseController>(context, listen: false).fetchPurchaseInvoices());
+            ).then((_) {
+              if (!mounted) return;
+              Provider.of<PurchaseController>(context, listen: false).fetchPurchaseInvoices();
+            });
           }
         )
       ],
