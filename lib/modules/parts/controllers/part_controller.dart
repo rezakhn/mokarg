@@ -151,7 +151,7 @@ class PartController with ChangeNotifier {
   }
 
   Future<void> selectPart(int partId) async {
-    _selectedPart = _parts.firstWhere((p) => p.id == partId, orElse: () => null as Part?);
+    _selectedPart = _parts.firstWhere((p) => p.id == partId, orElse: () => null);
     if (_selectedPart != null && _selectedPart!.isAssembly) {
       await fetchComponentsForSelectedAssembly();
     } else {
@@ -175,6 +175,20 @@ class PartController with ChangeNotifier {
       _selectedPartComposition = [];
     }
     _setLoading(false); // Notifies listeners
+  }
+
+  Future<List<PartComposition>> getCompositionsForAssembly(int assemblyPartId) async {
+    _setLoading(true); // Optional: manage loading state if desired
+    _setError(null);
+    try {
+      final compositions = await _dbService.getComponentsForAssembly(assemblyPartId);
+      _setLoading(false);
+      return compositions;
+    } catch (e) {
+      _setError('Failed to load compositions: ${e.toString()}');
+      _setLoading(false);
+      return [];
+    }
   }
 
   // For managing components of _selectedPart if it's an assembly
@@ -264,7 +278,7 @@ class PartController with ChangeNotifier {
   }
 
   Future<void> selectProduct(int productId) async {
-    _selectedProduct = _products.firstWhere((p) => p.id == productId, orElse: () => null as Product?);
+    _selectedProduct = _products.firstWhere((p) => p.id == productId, orElse: () => null);
     if (_selectedProduct != null) {
       await fetchPartsForSelectedProduct();
     } else {
@@ -370,7 +384,7 @@ class PartController with ChangeNotifier {
   }
 
   Future<void> selectAssemblyOrder(int orderId) async {
-    _selectedAssemblyOrder = _assemblyOrders.firstWhere((o) => o.id == orderId, orElse: () => null as AssemblyOrder?);
+    _selectedAssemblyOrder = _assemblyOrders.firstWhere((o) => o.id == orderId, orElse: () => null);
     if (_selectedAssemblyOrder != null) {
         await fetchRequiredComponentsForSelectedOrder();
     } else {

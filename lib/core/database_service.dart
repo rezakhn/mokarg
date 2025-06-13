@@ -169,5 +169,3 @@ class DatabaseService {
     _database = null;
   }
 }
-
-[end of workshop_management_app/lib/core/database_service.dart]

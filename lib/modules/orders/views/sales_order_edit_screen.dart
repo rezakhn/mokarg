@@ -218,7 +218,7 @@ class _SalesOrderEditScreenState extends State<SalesOrderEditScreen> {
         IconButton(icon: Icon(Icons.calendar_today), onPressed: () async {
             final DateTime? picked = await showDatePicker(context: context, initialDate: _paymentDate, firstDate: DateTime(2000), lastDate: DateTime(2101));
             if (picked != null) setState(() => _paymentDate = picked);
-        }), Text(DateFormat.yMMMd().format(_paymentDate))),
+        }), Text(DateFormat.yMMMd().format(_paymentDate)),
         ElevatedButton(onPressed: () async {
             final amount = double.tryParse(_paymentAmountController.text);
             if (amount != null && amount > 0) {

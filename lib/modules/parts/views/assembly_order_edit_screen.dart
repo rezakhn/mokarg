@@ -26,7 +26,7 @@ class _AssemblyOrderEditScreenState extends State<AssemblyOrderEditScreen> {
   void initState() {
     super.initState();
     _dateController = TextEditingController(text: DateFormat.yMMMd().format(_selectedDate));
-    Provider.of<PartController>(context, listen: false).fetchParts(isAssembly: true); // Fetch only assemblies
+    Provider.of<PartController>(context, listen: false).fetchParts(); // Fetch parts (controller will filter assemblies)
 
     if (widget.order != null) {
       _selectedAssemblyPartId = widget.order!.partId;
