@@ -3,7 +3,7 @@ import '../../../core/database_service.dart';
 import '../models/income_report_data.dart';
 import '../models/employee_performance_data.dart';
 import '../../employees/models/employee.dart'; // For Employee details
-import '../../employees/models/work_log.dart';   // For WorkLog details
+// Removed import for work_log.dart; assuming WorkLog might be in employee.dart or is otherwise missing.
 
 class ReportController with ChangeNotifier {
   final DatabaseService _dbService = DatabaseService();

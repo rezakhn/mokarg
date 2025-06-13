@@ -131,7 +131,7 @@ class AppTheme {
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
       ),
 
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData( // Corrected: CardTheme -> CardThemeData
         elevation: 1.5,
         margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0), // Standardized margin
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)), // Softer radius
@@ -150,7 +150,7 @@ class AppTheme {
         backgroundColor: _lightSurface, // Or _lightBackground
       ),
 
-      dialogTheme: DialogTheme(
+      dialogTheme: DialogThemeData( // Corrected: DialogTheme -> DialogThemeData
         backgroundColor: _lightSurface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
         titleTextStyle: _lightTextTheme.titleLarge?.copyWith(color: colorScheme.onSurface),

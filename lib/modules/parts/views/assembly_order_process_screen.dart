@@ -4,6 +4,7 @@ import '../controllers/part_controller.dart';
 import '../models/assembly_order.dart';
 import '../models/part_composition.dart';
 import '../../inventory/models/inventory_item.dart'; // For displaying stock
+import '../../../core/database_service.dart'; // Import DatabaseService
 
 class AssemblyOrderProcessScreen extends StatefulWidget {
   final int orderId;
@@ -15,6 +16,8 @@ class AssemblyOrderProcessScreen extends StatefulWidget {
 }
 
 class _AssemblyOrderProcessScreenState extends State<AssemblyOrderProcessScreen> {
+  final DatabaseService _dbService = DatabaseService(); // Instantiate DatabaseService
+
   @override
   void initState() {
     super.initState();
@@ -55,7 +58,8 @@ class _AssemblyOrderProcessScreenState extends State<AssemblyOrderProcessScreen>
                 Text('Required Components:', style: Theme.of(context).textTheme.titleMedium),
                 Expanded(
                   child: FutureBuilder<List<PartComposition>>(
-                    future: controller.getComponentsForAssembly(order.partId), // Direct call for simplicity here
+                    // Corrected: Call DatabaseService directly as PartController doesn't expose this specific future.
+                    future: _dbService.getComponentsForAssembly(order.partId),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const Center(child: CircularProgressIndicator());

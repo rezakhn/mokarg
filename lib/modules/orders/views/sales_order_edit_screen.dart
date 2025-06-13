@@ -192,7 +192,10 @@ class _SalesOrderEditScreenState extends State<SalesOrderEditScreen> {
 
     return Column(children: [
       Text("Payments", style: Theme.of(context).textTheme.titleMedium),
-      Text("Total Paid: ${_currentPayments.fold<double>(0.0, (sum, p) => sum + p.amount).toStringAsFixed(2)} / Outstanding: ${(SalesOrder(items: _currentOrderItems)..calculateTotalAmount()).totalAmount - _currentPayments.fold<double>(0.0, (sum, p) => sum + p.amount) } .toStringAsFixed(2)}", style: TextStyle(fontWeight: FontWeight.bold)),
+      Text(
+        "Total Paid: ${_currentPayments.fold<double>(0.0, (sum, p) => sum + p.amount).toStringAsFixed(2)} / Outstanding: ${(SalesOrder(customerId: _selectedCustomerId ?? 0, orderDate: _orderDate, items: _currentOrderItems)..calculateTotalAmount()).totalAmount - _currentPayments.fold<double>(0.0, (sum, p) => sum + p.amount)).toStringAsFixed(2)}",
+        style: TextStyle(fontWeight: FontWeight.bold)
+      ),
        ListView.builder(
           shrinkWrap: true, physics: NeverScrollableScrollPhysics(),
           itemCount: _currentPayments.length,
