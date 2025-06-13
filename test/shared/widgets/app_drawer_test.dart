@@ -15,15 +15,15 @@ import 'package:workshop_management_app/modules/reports/controllers/report_contr
 import 'package:workshop_management_app/modules/backup/controllers/backup_controller.dart';
 
 // Import target screens to check for their presence after navigation
-import 'package:workshop_management_app/modules/employees/views/employee_list_screen.dart';
-import 'package:workshop_management_app/modules/orders/views/customer_list_screen.dart';
-import 'package:workshop_management_app/modules/orders/views/sales_order_list_screen.dart';
-import 'package:workshop_management_app/modules/purchases/views/supplier_list_screen.dart';
-import 'package:workshop_management_app/modules/purchases/views/purchase_invoice_list_screen.dart';
-import 'package:workshop_management_app/modules/inventory/views/inventory_list_screen.dart';
-import 'package:workshop_management_app/modules/parts/views/part_list_screen.dart';
-import 'package:workshop_management_app/modules/reports/views/report_dashboard_screen.dart';
-import 'package:workshop_management_app/modules/backup/views/backup_settings_screen.dart';
+// Removed EmployeeListScreen as it's not used in active expect(find.byType(...))
+import 'package:workshop_management_app/modules/orders/views/customer_list_screen.dart'; // Used
+// Removed SalesOrderListScreen as it's not used in active expect(find.byType(...))
+// Removed SupplierListScreen as it's not used in active expect(find.byType(...))
+// Removed PurchaseInvoiceListScreen as it's not used in active expect(find.byType(...))
+// Removed InventoryListScreen as it's not used in active expect(find.byType(...))
+// Removed PartListScreen as it's not used in active expect(find.byType(...))
+import 'package:workshop_management_app/modules/reports/views/report_dashboard_screen.dart'; // Used
+// Removed BackupSettingsScreen as it's not used in active expect(find.byType(...))
 
 
 Widget createTestableAppDrawer() {

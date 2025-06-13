@@ -58,12 +58,14 @@ class _LowStockReportScreenState extends State<LowStockReportScreen> {
                 if (formKey.currentState!.validate()) {
                   final newThreshold = double.parse(thresholdController.text);
                   bool success = await controller.updateItemThreshold(item.itemName, newThreshold);
-                  Navigator.of(dialogContext).pop();
-                  if (success && mounted) {
+                  if (!mounted) return; // Check before using ScaffoldMessenger's context
+                  Navigator.of(dialogContext).pop(); // Pop the dialog first
+
+                  if (success) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Threshold for ${item.itemName} updated.')),
                     );
-                  } else if (!success && mounted && controller.errorMessage != null) {
+                  } else if (controller.errorMessage != null) {
                      ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Error: ${controller.errorMessage}')),
                     );

@@ -131,7 +131,7 @@ class BackupController with ChangeNotifier {
       try {
         await _dbService.database;
       } catch (e) {
-        print("Failed to re-initialize database after failed restore: $e");
+        // print("Failed to re-initialize database after failed restore: $e"); // Removed print
       }
     }
   }

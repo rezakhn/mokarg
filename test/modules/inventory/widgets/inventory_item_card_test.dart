@@ -25,7 +25,8 @@ void main() {
     expect(title.style?.fontWeight, FontWeight.bold);
 
     final card = tester.widget<Card>(find.byType(Card));
-    expect(card.color, Colors.red.withOpacity(0.1));
+    // Converted .withOpacity(0.1) to .withAlpha((0.1 * 255).round()) which is 26
+    expect(card.color, Colors.red.withAlpha(26));
   });
 
   testWidgets('InventoryItemCard calls onEditThreshold', (WidgetTester tester) async {

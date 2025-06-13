@@ -133,9 +133,10 @@ class _SalesOrderEditScreenState extends State<SalesOrderEditScreen> {
       success = await controller.updateSalesOrder(orderToSave);
     }
 
-    if (success && mounted) {
+    if (!mounted) return; // Check after awaits
+    if (success) {
       Navigator.of(context).pop();
-    } else if (mounted && controller.errorMessage != null) {
+    } else if (controller.errorMessage != null) { // mounted is already checked
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(controller.errorMessage!)));
     }
   }
@@ -204,11 +205,15 @@ class _SalesOrderEditScreenState extends State<SalesOrderEditScreen> {
             return PaymentListTile( // Using the new widget
               payment: payment,
               onDelete: () async {
+                // No context use before await, so initial mounted check not strictly needed for this part
                 final confirm = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(title: Text('Confirm Delete'), content: Text('Delete payment of ${payment.amount.toStringAsFixed(2)}?'), actions: [TextButton(child: Text('Cancel'), onPressed: ()=>Navigator.pop(ctx, false)), TextButton(child: Text('Delete'), onPressed: ()=>Navigator.pop(ctx, true))]));
+                if (!mounted) return; // Check after await showDialog
                 if (confirm == true) {
                   bool success = await Provider.of<OrderController>(context, listen: false).deletePayment(payment.id!);
-                  if(success && mounted) {
+                  if (!mounted) return; // Check after await deletePayment
+                  if(success) {
                       final updatedOrder = await Provider.of<OrderController>(context, listen: false).getFullSalesOrderDetails(order.id!);
+                      if (!mounted) return; // Check after await getFullSalesOrderDetails
                       if (updatedOrder != null) setState(() => _currentPayments = updatedOrder.payments);
                   }
                 }
@@ -220,16 +225,21 @@ class _SalesOrderEditScreenState extends State<SalesOrderEditScreen> {
         Expanded(child: TextFormField(controller: _paymentAmountController, decoration: InputDecoration(labelText: "Amount"), keyboardType: TextInputType.number)),
         IconButton(icon: Icon(Icons.calendar_today), onPressed: () async {
             final DateTime? picked = await showDatePicker(context: context, initialDate: _paymentDate, firstDate: DateTime(2000), lastDate: DateTime(2101));
-            if (picked != null) setState(() => _paymentDate = picked);
+            // setState is on picked != null, which is synchronous after await. Mounted check not strictly needed for setState itself if it's guarded.
+            if (picked != null) { // mounted check is implicitly handled by widget lifecycle for setState
+                setState(() => _paymentDate = picked);
+            }
         }), Text(DateFormat.yMMMd().format(_paymentDate))),
         ElevatedButton(onPressed: () async {
             final amount = double.tryParse(_paymentAmountController.text);
             if (amount != null && amount > 0) {
                 final newPayment = Payment(orderId: order.id!, amount: amount, paymentDate: _paymentDate);
                 bool success = await Provider.of<OrderController>(context, listen: false).addPayment(newPayment);
-                if(success && mounted) {
+                if (!mounted) return; // Check after await addPayment
+                if(success) {
                     _paymentAmountController.clear();
                     final updatedOrder = await Provider.of<OrderController>(context, listen: false).getFullSalesOrderDetails(order.id!);
+                    if (!mounted) return; // Check after await getFullSalesOrderDetails
                     if (updatedOrder != null) setState(() => _currentPayments = updatedOrder.payments);
                 }
             }
@@ -253,7 +263,8 @@ class _SalesOrderEditScreenState extends State<SalesOrderEditScreen> {
             onChanged: (String? newStatus) async {
                 if (newStatus != null && newStatus != currentStatus) {
                     bool success = await controller.updateSalesOrderStatus(widget.salesOrder!.id!, newStatus);
-                    if (success && mounted) {
+                    if (!mounted) return; // Check after await
+                    if (success) {
                         setState(() => _status = newStatus);
                     }
                 }
@@ -265,13 +276,14 @@ class _SalesOrderEditScreenState extends State<SalesOrderEditScreen> {
             onPressed: () async {
               await controller.selectSalesOrder(widget.salesOrder!.id!);
               await controller.checkStockForSelectedOrder();
-              if (mounted && controller.itemShortages.isNotEmpty) {
+              if (!mounted) return; // Check after awaits
+              if (controller.itemShortages.isNotEmpty) {
                 showDialog(context: context, builder: (ctx) => AlertDialog(
                   title: Text("Stock Shortages"),
                   content: Column(mainAxisSize: MainAxisSize.min, children: controller.itemShortages.entries.map((e) => Text('${e.key}: Short by ${e.value}')).toList()),
                   actions: [TextButton(onPressed: ()=>Navigator.pop(ctx), child: Text("OK"))],
                 ));
-              } else if (mounted && controller.itemShortages.isEmpty && controller.errorMessage == null) {
+              } else if (controller.itemShortages.isEmpty && controller.errorMessage == null) {
                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("All items in stock!")));
               }
             }
@@ -287,10 +299,13 @@ class _SalesOrderEditScreenState extends State<SalesOrderEditScreen> {
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                 child: Text("Mark as Completed (Deliver & Update Inventory)"),
                 onPressed: () async {
+                    // No context use before await, so initial mounted check not strictly needed for this part
                     final confirm = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(title: Text('Confirm Completion'), content: Text('Mark order as completed and update inventory? This cannot be undone easily.'), actions: [TextButton(child: Text('Cancel'), onPressed: ()=>Navigator.pop(ctx, false)), TextButton(child: Text('Complete'), onPressed: ()=>Navigator.pop(ctx, true))]));
+                    if (!mounted) return; // Check after await showDialog
                     if(confirm == true) {
                       bool success = await controller.completeSelectedSalesOrder(widget.salesOrder!.id!, false);
-                      if (success && mounted) {
+                      if (!mounted) return; // Check after await completeSelectedSalesOrder
+                      if (success) {
                           setState(() => _status = "Completed");
                           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Order completed and inventory updated!')));
                       }

@@ -68,11 +68,12 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
                       ],
                     ),
                   );
-                  if (confirm == true && mounted) {
+                  if (confirm == true && mounted) { // Initial mounted check is good
                     bool deleted = await controller.deleteEmployee(employee.id!);
-                      if (!deleted && mounted && controller.errorMessage != null) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(controller.errorMessage!)));
-                      }
+                    if (!mounted) return; // Check after await
+                    if (!deleted && controller.errorMessage != null) { // No need for second mounted here if already checked
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(controller.errorMessage!)));
+                    }
                   }
               },
               onLongPress: () {

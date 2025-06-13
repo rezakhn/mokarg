@@ -100,10 +100,11 @@ class _AssemblyOrderProcessScreenState extends State<AssemblyOrderProcessScreen>
                     style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                     onPressed: () async {
                       bool success = await controller.completeSelectedAssemblyOrder();
-                      if (success && mounted) {
+                      if (!mounted) return; // Check after await
+                      if (success) { // No need for second mounted check here
                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Assembly order completed! Inventory updated.')));
                         // UI should update due to controller notifying listeners
-                      } else if (mounted && controller.errorMessage != null) {
+                      } else if (controller.errorMessage != null) { // No need for second mounted check here
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${controller.errorMessage}')));
                       }
                     },

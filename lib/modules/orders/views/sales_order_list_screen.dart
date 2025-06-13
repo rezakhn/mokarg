@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
+// import 'package:intl/intl.dart'; // Removed unused import
 import 'package:workshop_management_app/shared/widgets/main_layout_scaffold.dart'; // Added
 import '../controllers/order_controller.dart';
 import '../models/customer.dart'; // Required for _getCustomerName
@@ -65,13 +65,15 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> {
               },
               onDelete: (order.status != 'Completed' && order.status != 'Cancelled') ? () async {
                 final confirm = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(title: Text('Confirm Delete'), content: Text('Are you sure you want to delete Sales Order #${order.id}?'), actions: [TextButton(child: Text('Cancel'), onPressed: ()=>Navigator.pop(ctx, false)), TextButton(child: Text('Delete'), onPressed: ()=>Navigator.pop(ctx, true))]));
-                if (confirm == true && mounted) {
+                if (!mounted) return; // Check after showDialog
+                if (confirm == true) { // No need to recheck mounted if it was true for the previous check
                     bool success = await controller.deleteSalesOrder(order.id!);
-                     if (!success && mounted && controller.errorMessage != null) {
+                    if (!mounted) return; // Check after await
+                    if (!success && controller.errorMessage != null) {
                          ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text('Error: ${controller.errorMessage}')),
                           );
-                      }
+                    }
                 }
               } : null
             );

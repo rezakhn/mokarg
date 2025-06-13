@@ -10,12 +10,12 @@ class MockDatabaseService extends Mock implements DatabaseService {}
 
 void main() {
   late InventoryController inventoryController;
-  late MockDatabaseService mockDatabaseService;
+  // late MockDatabaseService mockDatabaseService; // Removed as it was unused
 
   // For true unit tests, InventoryController should allow DatabaseService injection.
   // These tests will be integration-style due to current controller design.
   setUp(() {
-    mockDatabaseService = MockDatabaseService(); // Mock not directly used by controller unless refactored
+    // mockDatabaseService = MockDatabaseService(); // Mock not directly used by controller unless refactored
     inventoryController = InventoryController(); // Uses real DatabaseService
   });
 

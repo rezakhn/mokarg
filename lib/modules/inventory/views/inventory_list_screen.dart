@@ -61,12 +61,17 @@ class _InventoryListScreenState extends State<InventoryListScreen> {
                 if (formKey.currentState!.validate()) {
                   final newThreshold = double.parse(thresholdController.text);
                   bool success = await controller.updateItemThreshold(item.itemName, newThreshold);
-                  Navigator.of(dialogContext).pop();
-                  if (success && mounted) {
+                  // It's good practice to check mounted state before using Navigator with dialogContext,
+                  // though less critical if dialog is modal and maintains its own context tree briefly.
+                  // However, the main context for ScaffoldMessenger is the important one.
+                  if (!mounted) return; // Check before using ScaffoldMessenger's context
+                  Navigator.of(dialogContext).pop(); // Pop the dialog first
+
+                  if (success) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Threshold for ${item.itemName} updated.')),
                     );
-                  } else if (!success && mounted && controller.errorMessage != null) {
+                  } else if (controller.errorMessage != null) { // No need for !success check if success path taken
                      ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Error: ${controller.errorMessage}')),
                     );

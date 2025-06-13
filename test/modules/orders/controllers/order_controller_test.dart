@@ -17,18 +17,18 @@ class MockDatabaseService extends Mock implements DatabaseService {}
 
 void main() {
   late OrderController orderController;
-  late MockDatabaseService mockDatabaseService;
+  // late MockDatabaseService mockDatabaseService; // Removed as it was unused
 
   // As OrderController news up its own DatabaseService, these tests are more integration-focused.
   // For true unit tests, DatabaseService should be injectable.
   // We will test controller logic where possible and state changes.
   setUp(() {
-    mockDatabaseService = MockDatabaseService(); // This mock isn't used by controller directly
+    // mockDatabaseService = MockDatabaseService(); // This mock isn't used by controller directly
     orderController = OrderController(); // Uses real DatabaseService
   });
 
   group('OrderController - Customer Management', () {
-    final testCustomer = Customer(id: 1, name: 'Test Cust', contactInfo: '123-456');
+    // final testCustomer = Customer(id: 1, name: 'Test Cust', contactInfo: '123-456'); // Removed as it was unused
 
     test('fetchCustomers updates list and loading state', () async {
       // Integration style: relies on real DB

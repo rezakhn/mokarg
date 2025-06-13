@@ -73,9 +73,11 @@ class _ProductListScreenState extends State<ProductListScreen> {
                             ],
                         ),
                     );
+                    if (!mounted) return; // Check after showDialog
                     if (confirm == true) {
                         await controller.deleteProduct(product.id!);
-                        if (controller.errorMessage != null && mounted) {
+                        if (!mounted) return; // Check after await
+                        if (controller.errorMessage != null) { // mounted is already checked
                             ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(content: Text('Error: ${controller.errorMessage}')),
                             );

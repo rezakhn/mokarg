@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
+// import 'package:intl/intl.dart'; // Removed unused import
 import 'package:workshop_management_app/shared/widgets/main_layout_scaffold.dart';
 import '../controllers/purchase_controller.dart';
 import '../models/purchase_invoice.dart';
@@ -73,9 +73,10 @@ class _PurchaseInvoiceListScreenState extends State<PurchaseInvoiceListScreen> {
                     ]
                   )
                 );
-                if (confirm == true && mounted) {
+                if (confirm == true && mounted) { // Good initial check
                     bool success = await controller.deletePurchaseInvoice(invoice.id!);
-                    if (!success && mounted && controller.errorMessage != null) {
+                    if (!mounted) return; // Check after await
+                    if (!success && controller.errorMessage != null) { // No need for second mounted check
                          ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text('Error: ${controller.errorMessage}')),
                           );

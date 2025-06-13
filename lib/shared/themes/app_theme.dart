@@ -6,10 +6,10 @@ class AppTheme {
   static final Color _lightPrimaryColor = Colors.indigo.shade500; // Explicit shade
   static final Color _lightPrimaryVariantColor = Colors.indigo.shade700;
   static final Color _lightSecondaryColor = Colors.pinkAccent.shade400;
-  static final Color _lightOnPrimaryColor = Colors.white;
+  static const Color _lightOnPrimaryColor = Colors.white; // Made const
   static final Color _lightBackground = Colors.grey.shade100; // Lightened background slightly
-  static final Color _lightSurface = Colors.white;
-  static final Color _lightOnError = Colors.white;
+  static const Color _lightSurface = Colors.white; // Made const
+  static const Color _lightOnError = Colors.white; // Made const
   static final Color _lightError = Colors.red.shade700;
 
   // Define common text styles (can be customized further)
@@ -146,7 +146,7 @@ class AppTheme {
         subtitleTextStyle: _lightTextTheme.bodySmall, // Default subtitle style
       ),
 
-      drawerTheme: DrawerThemeData(
+      drawerTheme: const DrawerThemeData( // Made const
         backgroundColor: _lightSurface, // Or _lightBackground
       ),
 
@@ -170,16 +170,19 @@ class AppTheme {
       segmentedButtonTheme: SegmentedButtonThemeData(
         style: ButtonStyle(
           // backgroundColor: MaterialStateProperty.resolveWith<Color?>((states) {
-          //   if (states.contains(MaterialState.selected)) return colorScheme.primary.withOpacity(0.12);
+          //   // Converted .withOpacity(0.12) to .withAlpha((0.12 * 255).round()) which is 31
+          //   if (states.contains(MaterialState.selected)) return colorScheme.primary.withAlpha(31);
           //   return null; // Use default for unselected
           // }),
           foregroundColor: MaterialStateProperty.resolveWith<Color?>((states) {
             if (states.contains(MaterialState.selected)) return colorScheme.primary;
-            return colorScheme.onSurface.withOpacity(0.6);
+            // Converted .withOpacity(0.6) to .withAlpha((0.6 * 255).round()) which is 153
+            return colorScheme.onSurface.withAlpha(153);
           }),
           iconColor: MaterialStateProperty.resolveWith<Color?>((states) {
             if (states.contains(MaterialState.selected)) return colorScheme.primary;
-            return colorScheme.onSurface.withOpacity(0.6);
+            // Converted .withOpacity(0.6) to .withAlpha((0.6 * 255).round()) which is 153
+            return colorScheme.onSurface.withAlpha(153);
           }),
           textStyle: MaterialStateProperty.all(_lightTextTheme.labelMedium),
         )

@@ -25,6 +25,7 @@ dev_dependencies:
   mockito: ^5.4.4 # Or latest version
   build_runner: ^2.4.8 # Or latest version
   sqflite_common_ffi: ^2.3.0 # Or latest
+  path_provider_platform_interface: ^2.1.0 # Added for backup_service_test.dart
 
 flutter:
   uses-material-design: true
