@@ -29,10 +29,10 @@ class MockBackupController extends ChangeNotifier implements BackupController {
   @override Future<void> deleteBackup(BackupInfo backupToDelete) async { /* Mock */ }
   @override Future<void> clearAllBackupHistoryAndFiles() async { /* Mock */ }
 
-  // This method is private in actual controller, but we need to satisfy the interface for the mock.
-  // Or, don't implement the full interface but just the parts used by the UI.
-  // For simplicity in this mock, we'll just provide it.
-  Future<bool> _requestStoragePermission() async => true;
+  // Removed unused private method _requestStoragePermission from mock.
+  // If BackupController interface requires it (e.g. due to an abstract method, which is unlikely for private methods),
+  // this would need a different approach. Assuming it's not strictly required by an interface for mocking.
+  // Future<bool> _requestStoragePermission() async => true;
 
 
   // Test setup methods

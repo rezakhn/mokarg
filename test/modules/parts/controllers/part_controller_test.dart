@@ -8,16 +8,17 @@ import 'package:workshop_management_app/modules/parts/models/product.dart';
 import 'package:workshop_management_app/modules/parts/models/product_part.dart';
 import 'package:workshop_management_app/modules/parts/models/assembly_order.dart';
 import 'package:workshop_management_app/modules/inventory/models/inventory_item.dart';
+import 'package:sqflite/sqflite.dart'; // Added import for ConflictAlgorithm
 
 // It's better to generate mocks, but for simplicity defining manually:
 class MockDatabaseService extends Mock implements DatabaseService {}
 
 void main() {
   late PartController partController;
-  late MockDatabaseService mockDatabaseService;
+  // late MockDatabaseService mockDatabaseService; // Removed as it was unused
 
   // Helper to create a PartController with a specific mock
-  PartController createControllerWithMock(MockDatabaseService mock) {
+  PartController createControllerWithMock(MockDatabaseService? mock) { // mock param can be nullable if not always provided/used
     // This assumes PartController can accept DatabaseService via constructor or a setter for testing.
     // If PartController news up its own DatabaseService directly, true unit testing is harder.
     // For this example, we'll proceed as if it can be injected or we're testing observable behavior.
@@ -28,16 +29,16 @@ void main() {
   }
 
   setUp(() {
-    mockDatabaseService = MockDatabaseService();
-    partController = createControllerWithMock(mockDatabaseService);
+    // mockDatabaseService = MockDatabaseService(); // Removed as it was unused
+    partController = createControllerWithMock(null); // Pass null or remove mockDatabaseService from createControllerWithMock if not needed
     // If DatabaseService was injectable: partController = PartController(databaseService: mockDatabaseService);
   });
 
   group('PartController - Parts Management', () {
     final testPart1 = Part(id: 1, name: 'Raw Material A', isAssembly: false);
     final testPart2 = Part(id: 2, name: 'Assembly X', isAssembly: true);
-    final testPartsList = [testPart1, testPart2];
-    final testComposition = [PartComposition(id: 1, assemblyId: 2, componentPartId: 1, quantity: 2)];
+    // final testPartsList = [testPart1, testPart2]; // Removed as unused
+    // final testComposition = [PartComposition(id: 1, assemblyId: 2, componentPartId: 1, quantity: 2)]; // Removed as unused
 
     test('fetchParts correctly updates parts, rawMaterials, assemblies, and partIdToNameMap', () async {
       // This is an integration test with the current setup.
@@ -99,7 +100,7 @@ void main() {
   });
 
   group('PartController - Product Management', () {
-    final testProduct1 = Product(id: 1, name: 'Final Product Alpha');
+    // final testProduct1 = Product(id: 1, name: 'Final Product Alpha'); // Removed as unused
     // ... more tests similar to Parts ...
     test('fetchProducts updates product list', () async {
         await partController.fetchProducts();

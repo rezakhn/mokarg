@@ -50,7 +50,7 @@ class BackupService {
         'fileSize': fileSize,
       };
     } catch (e) {
-      print('Error creating backup: $e');
+      // print('Error creating backup: $e'); // Removed print
       return {'success': false, 'message': 'Backup creation failed: ${e.toString()}'};
     }
   }
@@ -80,7 +80,7 @@ class BackupService {
       return files;
 
     } catch (e) {
-      print('Error listing backup files: $e');
+      // print('Error listing backup files: $e'); // Removed print
       return [];
     }
   }
@@ -115,7 +115,7 @@ class BackupService {
       return {'success': true, 'message': 'Database restored successfully from ${p.basename(backupFilePath)}. Please restart the app.'};
 
     } catch (e) {
-      print('Error restoring backup: $e');
+      // print('Error restoring backup: $e'); // Removed print
       return {'success': false, 'message': 'Restore failed: ${e.toString()}'};
     }
   }
@@ -129,7 +129,7 @@ class BackupService {
       }
       return false; // File didn't exist
     } catch (e) {
-      print('Error deleting backup file: $e');
+      // print('Error deleting backup file: $e'); // Removed print
       return false;
     }
   }

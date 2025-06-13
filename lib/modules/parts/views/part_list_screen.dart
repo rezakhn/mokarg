@@ -60,9 +60,10 @@ class _PartListScreenState extends State<PartListScreen> {
                       ],
                     ),
                   );
-                  if (confirm == true && mounted) {
+                  if (confirm == true && mounted) { // Good initial check
                     await controller.deletePart(part.id!);
-                    if (controller.errorMessage != null && mounted) {
+                    if (!mounted) return; // Check after await
+                    if (controller.errorMessage != null) { // No need for second mounted check
                          ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text('Error: ${controller.errorMessage}')),
                           );

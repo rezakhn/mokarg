@@ -11,13 +11,20 @@ class MockInventoryControllerForReport extends ChangeNotifier implements Invento
   List<InventoryItem> _items = [];
   List<InventoryItem> _lowStock = [];
   bool _loading = false; String? _error;
+  InventoryItem? _selectedItem; // Field for the selected item
+
   @override List<InventoryItem> get inventoryItems => _items;
   @override List<InventoryItem> get lowStockItems => _lowStock;
   @override bool get isLoading => _loading; @override String? get errorMessage => _error;
+  @override InventoryItem? get selectedInventoryItem => _selectedItem; // Implementation for the getter
+
   @override Future<void> fetchInventoryItems({String? query}) async {}
   @override Future<bool> updateItemThreshold(String itemName, double newThreshold) async {return true;}
-  @override void selectInventoryItem(InventoryItem? item) {}
-  @override Future<InventoryItem?> getInventoryItemDetails(String itemName) async {return null;}
+  @override void selectInventoryItem(InventoryItem? item) { _selectedItem = item; notifyListeners(); } // Implementation for the method
+  @override Future<InventoryItem?> getInventoryItemDetails(String itemName) async {
+    // Simple mock: return item if its name matches and it's in our test list
+    return _items.firstWhere((i) => i.itemName == itemName, orElse: () => null as InventoryItem?);
+  }
   void setTestItems(List<InventoryItem> items) { _items = items; _lowStock = items.where((i) => i.quantity < i.threshold).toList(); notifyListeners(); }
 }
 

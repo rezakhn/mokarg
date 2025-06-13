@@ -102,7 +102,9 @@ class InventoryController with ChangeNotifier {
       _setLoading(false);
       // Update selected item if it's the one being changed
       if (_selectedInventoryItem?.itemName == itemName) {
-          _selectedInventoryItem = _inventoryItems.firstWhere((i) => i.itemName == itemName, orElse: () => null as InventoryItem?);
+          // Use .where().firstOrNull to safely get an InventoryItem?
+          final items = _inventoryItems.where((i) => i.itemName == itemName);
+          _selectedInventoryItem = items.isNotEmpty ? items.first : null;
       }
       notifyListeners(); // Ensure UI updates for selected item if necessary
       return true;

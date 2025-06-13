@@ -5,6 +5,7 @@ import 'package:workshop_management_app/modules/purchases/controllers/purchase_c
 import 'package:workshop_management_app/modules/purchases/models/supplier.dart';
 import 'package:workshop_management_app/modules/purchases/models/purchase_invoice.dart';
 import 'package:workshop_management_app/modules/inventory/models/inventory_item.dart'; // Added for cleanup
+import 'package:sqflite/sqflite.dart'; // Added import for ConflictAlgorithm
 
 // Create a mock class for DatabaseService
 // If using @GenerateMocks, would run build_runner. For manual, define like this:
@@ -116,7 +117,7 @@ void main() {
             // This part highlights the need for robust test data management.
             final invItem = await dbService.getInventoryItemByName(item.itemName);
             if(invItem != null && invItem.quantity == item.quantity) { // Attempt to only delete if it matches this test's addition
-               await dbService.deleteInventoryItemForTest(item.itemName); // Assumed method for test cleanup
+               await dbService.deleteInventoryItemForTest(item.itemName); // Restored call to the extension method
             }
           }
         }
@@ -125,13 +126,8 @@ void main() {
       await dbService.deleteSupplier(testSupplier.id!);
     });
 
-    // Helper method for tests that need to delete inventory items
-    // This should ideally be part of DatabaseService or a test utility.
-    // Adding it here to make tests runnable, but it's not a clean solution.
-    dbService.deleteInventoryItemForTest = (String itemName) async {
-        final db = await dbService.database;
-        await db.delete('inventory', where: 'item_name = ?', whereArgs: [itemName]);
-    };
+    // The incorrect assignment block for deleteInventoryItemForTest has been removed.
+    // The extension method DatabaseServiceTestExtension.deleteInventoryItemForTest will be used.
 
 
     test('fetchPurchaseInvoices updates invoices list (integration)', () async {

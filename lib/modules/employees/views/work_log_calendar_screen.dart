@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../controllers/employee_controller.dart';
-import '../models/employee.dart';
-import '../models/employee.dart' show WorkLog; // Explicitly import WorkLog
+import '../models/employee.dart'; // This import should provide both Employee and WorkLog
+// import '../models/employee.dart' show WorkLog; // Removed unnecessary import
 // We'll need a calendar package later, e.g., table_calendar
 // import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart'; // For date formatting
@@ -177,10 +177,10 @@ class AddEditWorkLogDialog extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _AddEditWorkLogDialogState createState() => _AddEditWorkLogDialogState();
+  AddEditWorkLogDialogState createState() => AddEditWorkLogDialogState();
 }
 
-class _AddEditWorkLogDialogState extends State<AddEditWorkLogDialog> {
+class AddEditWorkLogDialogState extends State<AddEditWorkLogDialog> { // Renamed to be public
   final _formKey = GlobalKey<FormState>();
   late double _hoursWorked;
   late bool _workedDay;

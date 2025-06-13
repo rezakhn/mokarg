@@ -3,18 +3,19 @@ import 'package:mockito/mockito.dart';
 import 'package:workshop_management_app/core/database_service.dart';
 import 'package:workshop_management_app/modules/inventory/controllers/inventory_controller.dart';
 import 'package:workshop_management_app/modules/inventory/models/inventory_item.dart';
+import 'package:sqflite/sqflite.dart'; // Added import for ConflictAlgorithm
 
 // Manual mock for DatabaseService
 class MockDatabaseService extends Mock implements DatabaseService {}
 
 void main() {
   late InventoryController inventoryController;
-  late MockDatabaseService mockDatabaseService;
+  // late MockDatabaseService mockDatabaseService; // Removed as it was unused
 
   // For true unit tests, InventoryController should allow DatabaseService injection.
   // These tests will be integration-style due to current controller design.
   setUp(() {
-    mockDatabaseService = MockDatabaseService(); // Mock not directly used by controller unless refactored
+    // mockDatabaseService = MockDatabaseService(); // Mock not directly used by controller unless refactored
     inventoryController = InventoryController(); // Uses real DatabaseService
   });
 

@@ -57,9 +57,10 @@ class _SupplierListScreenState extends State<SupplierListScreen> {
                     ]
                   )
                 );
-                if (confirm == true && mounted) {
+                if (confirm == true && mounted) { // Good initial check
                     bool success = await controller.deleteSupplier(supplier.id!);
-                    if (!success && mounted && controller.errorMessage != null) {
+                    if (!mounted) return; // Check after await
+                    if (!success && controller.errorMessage != null) { // No need for second mounted check
                          ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text('Error: ${controller.errorMessage}')),
                           );

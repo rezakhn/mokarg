@@ -110,7 +110,7 @@ class _PartEditScreenState extends State<PartEditScreen> {
     final controller = Provider.of<PartController>(context, listen: false);
     if (controller.parts.isEmpty) controller.fetchParts(); // Ensure parts are loaded for dropdown
 
-    final componentIdController = TextEditingController(); // Or use a dropdown
+    // final componentIdController = TextEditingController(); // Or use a dropdown - This was unused
     final quantityController = TextEditingController();
     Part? selectedComponentPart;
 

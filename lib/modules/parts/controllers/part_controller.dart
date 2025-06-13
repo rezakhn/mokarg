@@ -151,7 +151,9 @@ class PartController with ChangeNotifier {
   }
 
   Future<void> selectPart(int partId) async {
-    _selectedPart = _parts.firstWhere((p) => p.id == partId, orElse: () => null as Part?);
+    // Use .where() and .firstOrNull to safely get Part?
+    final foundParts = _parts.where((p) => p.id == partId);
+    _selectedPart = foundParts.isNotEmpty ? foundParts.first : null;
     if (_selectedPart != null && _selectedPart!.isAssembly) {
       await fetchComponentsForSelectedAssembly();
     } else {
@@ -264,7 +266,9 @@ class PartController with ChangeNotifier {
   }
 
   Future<void> selectProduct(int productId) async {
-    _selectedProduct = _products.firstWhere((p) => p.id == productId, orElse: () => null as Product?);
+    // Use .where() and .firstOrNull to safely get Product?
+    final foundProducts = _products.where((p) => p.id == productId);
+    _selectedProduct = foundProducts.isNotEmpty ? foundProducts.first : null;
     if (_selectedProduct != null) {
       await fetchPartsForSelectedProduct();
     } else {
@@ -370,7 +374,9 @@ class PartController with ChangeNotifier {
   }
 
   Future<void> selectAssemblyOrder(int orderId) async {
-    _selectedAssemblyOrder = _assemblyOrders.firstWhere((o) => o.id == orderId, orElse: () => null as AssemblyOrder?);
+    // Use .where() and .firstOrNull to safely get AssemblyOrder?
+    final foundOrders = _assemblyOrders.where((o) => o.id == orderId);
+    _selectedAssemblyOrder = foundOrders.isNotEmpty ? foundOrders.first : null;
     if (_selectedAssemblyOrder != null) {
         await fetchRequiredComponentsForSelectedOrder();
     } else {

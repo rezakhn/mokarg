@@ -114,7 +114,7 @@ void main() {
           expect(result['success'], false);
           expect(result['message'], contains('Original database file not found.'));
       } else {
-          print("Skipping: createBackup failure on non-existent DB test path because a DB file was found at default path.");
+          // print("Skipping: createBackup failure on non-existent DB test path because a DB file was found at default path."); // Removed print
           // If it found a DB, it would try to back it up. We are not testing that here.
       }
   });

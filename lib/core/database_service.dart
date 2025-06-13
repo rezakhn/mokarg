@@ -3,6 +3,7 @@ import 'package:path/path.dart' as p; // Alias to avoid conflict
 
 // Models (ensure all model imports from previous steps are here)
 import '../modules/employees/models/employee.dart';
+// import '../modules/employees/models/work_log.dart'; // Removed WorkLog import, assuming it's in employee.dart or missing
 import '../modules/purchases/models/supplier.dart';
 import '../modules/purchases/models/purchase_invoice.dart';
 import '../modules/inventory/models/inventory_item.dart';
@@ -79,35 +80,77 @@ class DatabaseService {
   Future<WorkLog?> getWorkLogById(int id) async { final db = await database; List<Map<String, dynamic>> maps = await db.query('work_logs', where: 'id = ?', whereArgs: [id]); if (maps.isNotEmpty) return WorkLog.fromMap(maps.first); return null; }
   Future<int> updateWorkLog(WorkLog workLog) async { final db = await database; return await db.update('work_logs', workLog.toMap(), where: 'id = ?', whereArgs: [workLog.id]); }
   Future<int> deleteWorkLog(int id) async { final db = await database; return await db.delete('work_logs', where: 'id = ?', whereArgs: [id]); }
-  Future<int> insertSupplier(Supplier supplier) async { final db = await database; try { return await db.insert('suppliers', supplier.toMap(), conflictAlgorithm: ConflictAlgorithm.fail); } catch (e) { print('Error inserting supplier: $e'); rethrow; } }
+  Future<int> insertSupplier(Supplier supplier) async { final db = await database; try { return await db.insert('suppliers', supplier.toMap(), conflictAlgorithm: ConflictAlgorithm.fail); } catch (e) { rethrow; } }
   Future<List<Supplier>> getSuppliers({String? query}) async { final db = await database; List<Map<String, dynamic>> maps; if (query != null && query.isNotEmpty) { maps = await db.query('suppliers', where: 'name LIKE ?', whereArgs: ['%$query%'], orderBy: 'name ASC'); } else { maps = await db.query('suppliers', orderBy: 'name ASC'); } return List.generate(maps.length, (i) => Supplier.fromMap(maps[i])); }
   Future<Supplier?> getSupplierById(int id) async { final db = await database; List<Map<String, dynamic>> maps = await db.query('suppliers', where: 'id = ?', whereArgs: [id]); if (maps.isNotEmpty) return Supplier.fromMap(maps.first); return null; }
-  Future<int> updateSupplier(Supplier supplier) async { final db = await database; try { return await db.update('suppliers', supplier.toMap(), where: 'id = ?', whereArgs: [supplier.id], conflictAlgorithm: ConflictAlgorithm.fail); } catch (e) { print('Error updating supplier: $e'); rethrow; } }
-  Future<int> deleteSupplier(int id) async { final db = await database; try { return await db.delete('suppliers', where: 'id = ?', whereArgs: [id]); } catch (e) { print('Error deleting supplier: $e'); rethrow; } }
+  Future<int> updateSupplier(Supplier supplier) async { final db = await database; try { return await db.update('suppliers', supplier.toMap(), where: 'id = ?', whereArgs: [supplier.id], conflictAlgorithm: ConflictAlgorithm.fail); } catch (e) { rethrow; } }
+  Future<int> deleteSupplier(int id) async { final db = await database; try { return await db.delete('suppliers', where: 'id = ?', whereArgs: [id]); } catch (e) { rethrow; } }
   Future<InventoryItem?> getInventoryItemByName(String itemName, {DatabaseExecutor? txn}) async { final db = txn ?? await database; List<Map<String, dynamic>> maps = await db.query('inventory', where: 'item_name = ?', whereArgs: [itemName]); if (maps.isNotEmpty) return InventoryItem.fromMap(maps.first); return null; }
   Future<List<InventoryItem>> getAllInventoryItems({String? query}) async { final db = await database; List<Map<String, dynamic>> maps; if (query != null && query.isNotEmpty) { maps = await db.query('inventory', where: 'item_name LIKE ?', whereArgs: ['%$query%'], orderBy: 'item_name ASC'); } else { maps = await db.query('inventory', orderBy: 'item_name ASC'); } return List.generate(maps.length, (i) => InventoryItem.fromMap(maps[i])); }
-  Future<int> updateInventoryItemThreshold(String itemName, double newThreshold) async { final db = await database; final item = await getInventoryItemByName(itemName); if (item == null) { print("Item not found in inventory to update threshold: $itemName"); return 0; } return await db.update('inventory', {'threshold': newThreshold}, where: 'item_name = ?', whereArgs: [itemName]); }
+  Future<int> updateInventoryItemThreshold(String itemName, double newThreshold) async { final db = await database; final item = await getInventoryItemByName(itemName); if (item == null) { return 0; } return await db.update('inventory', {'threshold': newThreshold}, where: 'item_name = ?', whereArgs: [itemName]); }
   Future<void> manuallyAdjustInventoryItemQuantity(String itemName, double newAbsoluteQuantity, {double? newThreshold}) async { final db = await database; Map<String, dynamic> values = {'quantity': newAbsoluteQuantity}; if (newThreshold != null) { values['threshold'] = newThreshold; } final item = await getInventoryItemByName(itemName); if (item != null) { await db.update('inventory', values, where: 'item_name = ?', whereArgs: [itemName]); } else { values['item_name'] = itemName; values.putIfAbsent('threshold', () => 0.0); await db.insert('inventory', values); } }
   Future<void> _updateInventoryItemQuantityInternal(String itemName, double quantityChange, {required DatabaseExecutor txn, double? threshold}) async { final currentItem = await getInventoryItemByName(itemName, txn: txn); if (currentItem != null) { final newQuantity = currentItem.quantity + quantityChange; Map<String, dynamic> updateValues = {'quantity': newQuantity}; if (threshold != null) updateValues['threshold'] = threshold; await txn.update('inventory', updateValues, where: 'item_name = ?', whereArgs: [itemName]); } else { await txn.insert('inventory', {'item_name': itemName, 'quantity': quantityChange, 'threshold': threshold ?? 0.0}); } }
   Future<int> insertPurchaseInvoice(PurchaseInvoice invoice) async { final db = await database; return await db.transaction((txn) async { invoice.calculateTotalAmount(); int invoiceId = await txn.insert('purchase_invoices', invoice.toMap(), conflictAlgorithm: ConflictAlgorithm.replace); for (var item in invoice.items) { var itemMap = item.toMap(); itemMap['invoice_id'] = invoiceId; await txn.insert('purchase_items', itemMap, conflictAlgorithm: ConflictAlgorithm.replace); await _updateInventoryItemQuantityInternal(item.itemName, item.quantity, txn: txn); } return invoiceId; }); }
-  Future<List<PurchaseItem>> _getPurchaseItemsForInvoice(int invoiceId, {DatabaseExecutor? txn}) async { final db = txn ?? await database; final List<Map<String, dynamic>> maps = await db.query('purchase_items', where: 'invoice_id = ?', whereArgs: [invoiceId]); return List.generate(maps.length, (i) => PurchaseItem.fromMap(maps[i])); }
-  Future<List<PurchaseInvoice>> getPurchaseInvoices({DateTime? startDate, DateTime? endDate, int? supplierId}) async { final db = await database; String whereFinalClause = ""; List<dynamic> whereArgsFinal = []; if (supplierId != null) { whereFinalClause += (whereFinalClause.isNotEmpty ? " AND " : "") + "supplier_id = ?"; whereArgsFinal.add(supplierId); } if (startDate != null && endDate != null) { whereFinalClause += (whereFinalClause.isNotEmpty ? " AND " : "") + "date BETWEEN ? AND ?"; whereArgsFinal.add(startDate.toIso8601String().substring(0,10)); whereArgsFinal.add(endDate.toIso8601String().substring(0,10)); } else if (startDate != null) { whereFinalClause += (whereFinalClause.isNotEmpty ? " AND " : "") + "date >= ?"; whereArgsFinal.add(startDate.toIso8601String().substring(0,10)); } else if (endDate != null) { whereFinalClause += (whereFinalClause.isNotEmpty ? " AND " : "") + "date <= ?"; whereArgsFinal.add(endDate.toIso8601String().substring(0,10)); } final List<Map<String, dynamic>> invoiceMaps = await db.query('purchase_invoices', where: whereFinalClause.isNotEmpty ? whereFinalClause : null, whereArgs: whereArgsFinal.isNotEmpty ? whereArgsFinal : null, orderBy: 'date DESC'); List<PurchaseInvoice> invoices = []; for (var map in invoiceMaps) { List<PurchaseItem> items = await _getPurchaseItemsForInvoice(map['id'] as int); invoices.add(PurchaseInvoice.fromMap(map, items)); } return invoices; }
+
+  Future<List<PurchaseItem>> _getPurchaseItemsForInvoice(int invoiceId, {DatabaseExecutor? txn}) async {
+    final db = txn ?? await database;
+    final List<Map<String, dynamic>> maps = await db.query('purchase_items', where: 'invoice_id = ?', whereArgs: [invoiceId]);
+    return List.generate(maps.length, (i) => PurchaseItem.fromMap(maps[i]));
+  } // Ensuring this method is properly terminated and separated.
+
+  // Adding explicit newlines and checking structure for the following method.
+  Future<List<PurchaseInvoice>> getPurchaseInvoices({
+    DateTime? startDate,
+    DateTime? endDate,
+    int? supplierId
+  }) async {
+    final db = await database;
+    String whereFinalClause = "";
+    List<dynamic> whereArgsFinal = [];
+    if (supplierId != null) {
+      whereFinalClause += (whereFinalClause.isNotEmpty ? " AND " : "") + "supplier_id = ?";
+      whereArgsFinal.add(supplierId);
+    }
+    if (startDate != null && endDate != null) {
+      whereFinalClause += (whereFinalClause.isNotEmpty ? " AND " : "") + "date BETWEEN ? AND ?";
+      whereArgsFinal.add(startDate.toIso8601String().substring(0,10));
+      whereArgsFinal.add(endDate.toIso8601String().substring(0,10));
+    } else if (startDate != null) {
+      whereFinalClause += (whereFinalClause.isNotEmpty ? " AND " : "") + "date >= ?";
+      whereArgsFinal.add(startDate.toIso8601String().substring(0,10));
+    } else if (endDate != null) {
+      whereFinalClause += (whereFinalClause.isNotEmpty ? " AND " : "") + "date <= ?";
+      whereArgsFinal.add(endDate.toIso8601String().substring(0,10));
+    }
+    final List<Map<String, dynamic>> invoiceMaps = await db.query(
+      'purchase_invoices',
+      where: whereFinalClause.isNotEmpty ? whereFinalClause : null,
+      whereArgs: whereArgsFinal.isNotEmpty ? whereArgsFinal : null,
+      orderBy: 'date DESC'
+    );
+    List<PurchaseInvoice> invoices = [];
+    for (var map in invoiceMaps) {
+      List<PurchaseItem> items = await _getPurchaseItemsForInvoice(map['id'] as int);
+      invoices.add(PurchaseInvoice.fromMap(map, items));
+    }
+    return invoices;
+  }
   Future<PurchaseInvoice?> getPurchaseInvoiceById(int id) async { final db = await database; List<Map<String, dynamic>> maps = await db.query('purchase_invoices', where: 'id = ?', whereArgs: [id]); if (maps.isNotEmpty) { List<PurchaseItem> items = await _getPurchaseItemsForInvoice(id); return PurchaseInvoice.fromMap(maps.first, items); } return null; }
   Future<int> updatePurchaseInvoice(PurchaseInvoice invoice) async { final db = await database; return await db.transaction((txn) async { invoice.calculateTotalAmount(); List<PurchaseItem> oldItems = await _getPurchaseItemsForInvoice(invoice.id!, txn: txn); for (var oldItem in oldItems) { await _updateInventoryItemQuantityInternal(oldItem.itemName, -oldItem.quantity, txn: txn); } int count = await txn.update('purchase_invoices', invoice.toMap(), where: 'id = ?', whereArgs: [invoice.id], conflictAlgorithm: ConflictAlgorithm.replace); await txn.delete('purchase_items', where: 'invoice_id = ?', whereArgs: [invoice.id]); for (var item in invoice.items) { var itemMap = item.toMap(); itemMap['invoice_id'] = invoice.id; await txn.insert('purchase_items', itemMap, conflictAlgorithm: ConflictAlgorithm.replace); await _updateInventoryItemQuantityInternal(item.itemName, item.quantity, txn: txn); } return count; }); }
   Future<int> deletePurchaseInvoice(int id) async { final db = await database; return await db.transaction((txn) async { List<PurchaseItem> itemsToDelete = await _getPurchaseItemsForInvoice(id, txn: txn); for (var item in itemsToDelete) { await _updateInventoryItemQuantityInternal(item.itemName, -item.quantity, txn: txn); } return await txn.delete('purchase_invoices', where: 'id = ?', whereArgs: [id]); }); }
-  Future<int> insertPart(Part part) async { final db = await database; try { return await db.insert('parts', part.toMap(), conflictAlgorithm: ConflictAlgorithm.fail); } catch (e) { print('Error inserting part: $e'); rethrow; } }
+  Future<int> insertPart(Part part) async { final db = await database; try { return await db.insert('parts', part.toMap(), conflictAlgorithm: ConflictAlgorithm.fail); } catch (e) { rethrow; } }
   Future<List<Part>> getParts({String? query, bool? isAssembly}) async { final db = await database; String? whereClause; List<dynamic> whereArgs = []; if (query != null && query.isNotEmpty) { whereClause = 'name LIKE ?'; whereArgs.add('%$query%'); } if (isAssembly != null) { whereClause = (whereClause == null ? '' : '$whereClause AND ') + 'is_assembly = ?'; whereArgs.add(isAssembly ? 1 : 0); } final List<Map<String, dynamic>> maps = await db.query('parts', where: whereClause, whereArgs: whereArgs.isNotEmpty ? whereArgs : null, orderBy: 'name ASC'); return List.generate(maps.length, (i) => Part.fromMap(maps[i])); }
   Future<Part?> getPartById(int id, {DatabaseExecutor? txn}) async { final db = txn ?? await database; final List<Map<String, dynamic>> maps = await db.query('parts', where: 'id = ?', whereArgs: [id]); if (maps.isNotEmpty) return Part.fromMap(maps.first); return null; }
-  Future<int> updatePart(Part part) async { final db = await database; try { return await db.update('parts', part.toMap(), where: 'id = ?', whereArgs: [part.id], conflictAlgorithm: ConflictAlgorithm.fail); } catch (e) { print('Error updating part: $e'); rethrow; } }
+  Future<int> updatePart(Part part) async { final db = await database; try { return await db.update('parts', part.toMap(), where: 'id = ?', whereArgs: [part.id], conflictAlgorithm: ConflictAlgorithm.fail); } catch (e) { rethrow; } }
   Future<int> deletePart(int id) async { final db = await database; return await db.delete('parts', where: 'id = ?', whereArgs: [id]); }
   Future<List<PartComposition>> getComponentsForAssembly(int assemblyId, {DatabaseExecutor? txn}) async { final db = txn ?? await database; final List<Map<String, dynamic>> maps = await db.query('part_compositions', where: 'assembly_id = ?', whereArgs: [assemblyId]); return List.generate(maps.length, (i) => PartComposition.fromMap(maps[i])); }
   Future<int> addComponentToAssembly(PartComposition composition) async { final db = await database; final assemblyPart = await getPartById(composition.assemblyId); if (assemblyPart == null || !assemblyPart.isAssembly) throw Exception('Assembly ID does not refer to an assembly part.'); final componentPart = await getPartById(composition.componentPartId); if (componentPart == null) throw Exception('Component Part ID does not exist.'); return await db.insert('part_compositions', composition.toMap()); }
   Future<void> setAssemblyComponents(int assemblyId, List<PartComposition> components) async { final db = await database; await db.transaction((txn) async { await txn.delete('part_compositions', where: 'assembly_id = ?', whereArgs: [assemblyId]); for (var comp in components) { if (comp.assemblyId != assemblyId) throw Exception('Component assemblyId mismatch.'); final componentPart = await getPartById(comp.componentPartId, txn: txn); if (componentPart == null) throw Exception('Component Part ID ${comp.componentPartId} does not exist.'); await txn.insert('part_compositions', comp.toMap()); } }); }
   Future<int> removeComponentFromAssembly(int compositionId) async { final db = await database; return await db.delete('part_compositions', where: 'id = ?', whereArgs: [compositionId]); }
-  Future<int> insertProduct(Product product) async { final db = await database; try { return await db.insert('products', product.toMap(), conflictAlgorithm: ConflictAlgorithm.fail); } catch (e) { print('Error inserting product: $e'); rethrow; } }
+  Future<int> insertProduct(Product product) async { final db = await database; try { return await db.insert('products', product.toMap(), conflictAlgorithm: ConflictAlgorithm.fail); } catch (e) { rethrow; } }
   Future<List<Product>> getProducts({String? query}) async { final db = await database; final List<Map<String, dynamic>> maps = await db.query('products', where: query != null ? 'name LIKE ?' : null, whereArgs: query != null ? ['%$query%'] : null, orderBy: 'name ASC'); return List.generate(maps.length, (i) => Product.fromMap(maps[i])); }
   Future<Product?> getProductById(int id, {DatabaseExecutor? txn}) async { final db = txn ?? await database; final List<Map<String, dynamic>> maps = await db.query('products', where: 'id = ?', whereArgs: [id]); if (maps.isNotEmpty) return Product.fromMap(maps.first); return null; }
-  Future<int> updateProduct(Product product) async { final db = await database; try { return await db.update('products', product.toMap(), where: 'id = ?', whereArgs: [product.id], conflictAlgorithm: ConflictAlgorithm.fail); } catch (e) { print('Error updating product: $e'); rethrow; } }
+  Future<int> updateProduct(Product product) async { final db = await database; try { return await db.update('products', product.toMap(), where: 'id = ?', whereArgs: [product.id], conflictAlgorithm: ConflictAlgorithm.fail); } catch (e) { rethrow; } }
   Future<int> deleteProduct(int id) async { final db = await database; return await db.delete('products', where: 'id = ?', whereArgs: [id]); }
   Future<List<ProductPart>> getPartsForProduct(int productId, {DatabaseExecutor? txn}) async { final db = txn ?? await database; final List<Map<String, dynamic>> maps = await db.query('product_parts', where: 'product_id = ?', whereArgs: [productId]); return List.generate(maps.length, (i) => ProductPart.fromMap(maps[i])); }
   Future<void> setProductParts(int productId, List<ProductPart> productParts) async { final db = await database; await db.transaction((txn) async { await txn.delete('product_parts', where: 'product_id = ?', whereArgs: [productId]); for (var pp in productParts) { if (pp.productId != productId) throw Exception('ProductPart productId mismatch.'); final part = await getPartById(pp.partId, txn: txn); if (part == null) throw Exception('Part ID ${pp.partId} for product does not exist.'); await txn.insert('product_parts', pp.toMap()); } }); }
@@ -131,8 +174,16 @@ class DatabaseService {
   Future<int> updateSalesOrderStatus(int orderId, String status) async { final db = await database; return await db.update('sales_orders', {'status': status}, where: 'id = ?', whereArgs: [orderId]); }
   Future<int> deleteSalesOrder(int id) async { final db = await database; return await db.delete('sales_orders', where: 'id = ?', whereArgs: [id]); }
   Future<int> insertPayment(Payment payment) async { final db = await database; return await db.insert('payments', payment.toMap()); }
-  Future<List<Payment>> getPaymentsForOrder(int orderId) async { return _getPaymentsForSalesOrder(orderId); }
-  Future<int> deletePayment(int paymentId) async { final db = await database; return await db.delete('payments', where: 'id = ?', whereArgs: [paymentId]); }
+  Future<List<Payment>> getPaymentsForOrder(int orderId) async {
+    return _getPaymentsForSalesOrder(orderId);
+  }
+
+  Future<int> deletePayment(int paymentId) async {
+    final db = await database;
+    return await db.delete('payments', where: 'id = ?', whereArgs: [paymentId]);
+  }
+  // Ensuring clean separation and no hidden characters before the next method.
+
   Future<void> completeSalesOrderAndUpdateInventory(int salesOrderId) async { final db = await database; await db.transaction((txn) async { final order = await getSalesOrderById(salesOrderId); if (order == null) throw Exception('SalesOrder not found for completion.'); if (order.status == 'Completed') throw Exception('SalesOrder already completed.'); for (var item in order.items) { final product = await getProductById(item.productId, txn: txn); if (product == null) throw Exception('Product with ID ${item.productId} not found.'); final productParts = await getPartsForProduct(product.id!, txn: txn); if (productParts.isEmpty) { await _updateInventoryItemQuantityInternal(product.name, -item.quantity, txn: txn); } else { for (var productPart in productParts) { final partToConsume = await getPartById(productPart.partId, txn: txn); if (partToConsume == null) throw Exception('Part with ID ${productPart.partId} for product ${product.name} not found.'); final totalQuantityOfPartToConsume = productPart.quantity * item.quantity; await _updateInventoryItemQuantityInternal(partToConsume.name, -totalQuantityOfPartToConsume, txn: txn); } } } await txn.update('sales_orders', {'status': 'Completed'}, where: 'id = ?', whereArgs: [salesOrderId]); }); }
   Future<double> getSalesTotalInDateRange(DateTime start, DateTime end) async { final db = await database; final String startDateStr = start.toIso8601String().substring(0, 10); final String endDateStr = end.toIso8601String().substring(0, 10); final List<Map<String, dynamic>> result = await db.rawQuery( "SELECT SUM(total_amount) as total FROM sales_orders WHERE status = 'Completed' AND order_date BETWEEN ? AND ?", [startDateStr, endDateStr], ); if (result.isNotEmpty && result.first['total'] != null) { return (result.first['total'] as num).toDouble(); } return 0.0; }
   Future<double> getPurchaseTotalInDateRange(DateTime start, DateTime end) async { final db = await database; final String startDateStr = start.toIso8601String().substring(0, 10); final String endDateStr = end.toIso8601String().substring(0, 10); final List<Map<String, dynamic>> result = await db.rawQuery( "SELECT SUM(total_amount) as total FROM purchase_invoices WHERE date BETWEEN ? AND ?", [startDateStr, endDateStr], ); if (result.isNotEmpty && result.first['total'] != null) { return (result.first['total'] as num).toDouble(); } return 0.0; }

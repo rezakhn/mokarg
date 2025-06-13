@@ -14,7 +14,8 @@ class InventoryItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isLowStock = item.quantity < item.threshold;
-    final Color? tileColor = isLowStock ? Colors.red.withOpacity(0.1) : null;
+    // Converted .withOpacity(0.1) to .withAlpha((0.1 * 255).round()) which is 26
+    final Color? tileColor = isLowStock ? Colors.red.withAlpha(26) : null;
     final Color? textColor = isLowStock ? Colors.red.shade700 : null;
     final FontWeight titleFontWeight = isLowStock ? FontWeight.bold : FontWeight.normal;
 

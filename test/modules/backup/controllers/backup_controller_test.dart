@@ -23,11 +23,12 @@ void main() {
   sqfliteTestInit(); // Initialize sqflite_common_ffi for all tests in this file
 
   late BackupController backupController;
-  // late MockBackupService mockBackupService; // Not used due to controller design
-  // late MockDatabaseService mockDatabaseService; // Not used due to controller design
+  // MockBackupService and MockDatabaseService declarations removed as they were unused.
+  // late MockBackupService mockBackupService;
+  // late MockDatabaseService mockDatabaseService;
 
   setUp(() async {
-    // backupController = BackupController(mockBackupService, mockDatabaseService); // IDEAL
+    // backupController = BackupController(mockBackupService, mockDatabaseService); // IDEAL - would use the mocks
     backupController = BackupController(); // CURRENT REALITY (uses real services with in-memory DB)
 
     // Since BackupController uses its own DatabaseService instance, and DatabaseService
@@ -77,7 +78,7 @@ void main() {
       // Let's assume it works for the "success" path for controller logic.
       // For a more robust test, one would mock BackupService.
 
-      print("Note: createNewBackup test relies on BackupService's actual file operations to succeed for full success path.");
+      // print("Note: createNewBackup test relies on BackupService's actual file operations to succeed for full success path."); // Removed print
       await backupController.createNewBackup(notes: 'Test Backup');
 
       // Check controller state after attempting backup

@@ -5,9 +5,11 @@ import 'package:workshop_management_app/modules/reports/controllers/report_contr
 import 'package:workshop_management_app/modules/reports/models/income_report_data.dart';
 import 'package:workshop_management_app/modules/reports/models/employee_performance_data.dart';
 import 'package:workshop_management_app/modules/employees/models/employee.dart';
-import 'package:workshop_management_app/modules/employees/models/work_log.dart';
+// Removed import for work_log.dart; assuming WorkLog might be in employee.dart or is otherwise missing.
 import 'package:workshop_management_app/modules/orders/models/sales_order.dart'; // For seeding
 import 'package:workshop_management_app/modules/purchases/models/purchase_invoice.dart'; // For seeding
+import 'package:workshop_management_app/modules/orders/models/customer.dart'; // Added for Customer model
+import 'package:workshop_management_app/modules/purchases/models/supplier.dart'; // Added for Supplier model
 import 'package:sqflite_common_ffi/sqflite_ffi.dart'; // For test setup
 
 
