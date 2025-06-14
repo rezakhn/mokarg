@@ -8,6 +8,11 @@ import 'package:workshop_management_app/modules/parts/models/product_part.dart';
 import 'package:workshop_management_app/modules/parts/models/assembly_order.dart';
 import 'package:workshop_management_app/modules/inventory/models/inventory_item.dart';
 import 'package:sqflite/sqflite.dart'; // Added import for ConflictAlgorithm
+import 'package:mockito/mockito.dart'; // Added mockito import
+import 'package:workshop_management_app/core/database_service.dart'; // Ensure DatabaseService is imported
+
+// Define MockDatabaseService to satisfy the type hint, as hinted by previous comments
+class MockDatabaseService extends Mock implements DatabaseService {}
 
 // It's better to generate mocks, but for simplicity defining manually:
 // class MockDatabaseService extends Mock implements DatabaseService {} // Removed as not used

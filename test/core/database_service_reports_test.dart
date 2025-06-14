@@ -70,7 +70,7 @@ void main() {
   final rangeStart = DateTime(2023, 7, 1);
   final rangeEnd = DateTime(2023, 7, 31);
 
-  test('getSalesTotalInDateRange sums correctly for "Completed" orders', async () {
+  test('getSalesTotalInDateRange sums correctly for "Completed" orders', () async {
     final customer = await dbService.getCustomers(query: "Test Cust For Report");
     expect(customer, isNotEmpty, reason: "Test customer should exist for FK constraints.");
     final customerId = customer.first.id!;
@@ -87,7 +87,7 @@ void main() {
     expect(total, 250.0); // 100 + 150
   });
 
-  test('getPurchaseTotalInDateRange sums correctly', async () {
+  test('getPurchaseTotalInDateRange sums correctly', () async {
     final supplier = await dbService.getSuppliers(query: "Test Supp For Report");
     expect(supplier, isNotEmpty, reason: "Test supplier should exist for FK constraints.");
     final supplierId = supplier.first.id!;
