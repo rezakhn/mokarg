@@ -149,22 +149,22 @@ class _SalesOrderEditScreenState extends State<SalesOrderEditScreen> {
 
     showDialog(context: context, builder: (dialogContext){
       return AlertDialog(
-        title: Text("Add Item to Order"),
+        title: const Text("Add Item to Order"),
         content: StatefulBuilder(builder: (BuildContext context, StateSetter setStateDialog){
           return Column(mainAxisSize: MainAxisSize.min, children: [
             DropdownButtonFormField<Product>(
-              hint: Text("Select Product"),
+              hint: const Text("Select Product"),
               value: selectedProduct,
               items: orderController.availableProducts.map((p) => DropdownMenuItem<Product>(value: p, child: Text(p.name))).toList(),
               onChanged: (Product? val) { setStateDialog(() { selectedProduct = val; priceController.text = ""; }); },
               validator: (val) => val == null ? "Product required" : null,
             ),
-            TextFormField(controller: quantityController, decoration: InputDecoration(labelText: "Quantity"), keyboardType: TextInputType.number),
-            TextFormField(controller: priceController, decoration: InputDecoration(labelText: "Price per Unit"), keyboardType: TextInputType.number),
+            TextFormField(controller: quantityController, decoration: const InputDecoration(labelText: "Quantity"), keyboardType: TextInputType.number),
+            TextFormField(controller: priceController, decoration: const InputDecoration(labelText: "Price per Unit"), keyboardType: TextInputType.number),
           ]);
         }),
         actions: [
-          TextButton(onPressed: ()=>Navigator.pop(dialogContext), child: Text("Cancel")),
+          TextButton(onPressed: ()=>Navigator.pop(dialogContext), child: const Text("Cancel")),
           ElevatedButton(onPressed: (){
             if (selectedProduct != null && quantityController.text.isNotEmpty && priceController.text.isNotEmpty) {
               final qty = double.tryParse(quantityController.text);
@@ -181,7 +181,7 @@ class _SalesOrderEditScreenState extends State<SalesOrderEditScreen> {
                 Navigator.pop(dialogContext);
               }
             }
-          }, child: Text("Add Item")),
+          }, child: const Text("Add Item")),
         ],
       );
     });
@@ -223,7 +223,7 @@ class _SalesOrderEditScreenState extends State<SalesOrderEditScreen> {
               payment: payment,
               onDelete: () async {
                 // No context use before await, so initial mounted check not strictly needed for this part
-                final confirm = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(title: Text('Confirm Delete'), content: Text('Delete payment of ${payment.amount.toStringAsFixed(2)}?'), actions: [TextButton(child: Text('Cancel'), onPressed: ()=>Navigator.pop(ctx, false)), TextButton(child: Text('Delete'), onPressed: ()=>Navigator.pop(ctx, true))]));
+                final confirm = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(title: const Text('Confirm Delete'), content: Text('Delete payment of ${payment.amount.toStringAsFixed(2)}?'), actions: [TextButton(child: const Text('Cancel'), onPressed: ()=>Navigator.pop(ctx, false)), TextButton(child: const Text('Delete'), onPressed: ()=>Navigator.pop(ctx, true))]));
                 if (!mounted) return; // Check after await showDialog
                 if (confirm == true) {
                   bool success = await Provider.of<OrderController>(context, listen: false).deletePayment(payment.id!);
@@ -274,7 +274,7 @@ class _SalesOrderEditScreenState extends State<SalesOrderEditScreen> {
 
     return Column(children: [
         DropdownButtonFormField<String>(
-            decoration: InputDecoration(labelText: "Order Status"),
+            decoration: const InputDecoration(labelText: "Order Status"),
             value: currentStatus,
             items: statuses.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
             onChanged: (String? newStatus) async {
@@ -296,9 +296,9 @@ class _SalesOrderEditScreenState extends State<SalesOrderEditScreen> {
               if (!mounted) return; // Check after awaits
               if (controller.itemShortages.isNotEmpty) {
                 showDialog(context: context, builder: (ctx) => AlertDialog(
-                  title: Text("Stock Shortages"),
+                  title: const Text("Stock Shortages"),
                   content: Column(mainAxisSize: MainAxisSize.min, children: controller.itemShortages.entries.map((e) => Text('${e.key}: Short by ${e.value}')).toList()),
-                  actions: [TextButton(onPressed: ()=>Navigator.pop(ctx), child: Text("OK"))],
+                  actions: [TextButton(onPressed: ()=>Navigator.pop(ctx), child: const Text("OK"))],
                 ));
               } else if (controller.itemShortages.isEmpty && controller.errorMessage == null) {
                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("All items in stock!")));
@@ -317,7 +317,7 @@ class _SalesOrderEditScreenState extends State<SalesOrderEditScreen> {
                 child: Text("Mark as Completed (Deliver & Update Inventory)"),
                 onPressed: () async {
                     // No context use before await, so initial mounted check not strictly needed for this part
-                    final confirm = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(title: Text('Confirm Completion'), content: Text('Mark order as completed and update inventory? This cannot be undone easily.'), actions: [TextButton(child: Text('Cancel'), onPressed: ()=>Navigator.pop(ctx, false)), TextButton(child: Text('Complete'), onPressed: ()=>Navigator.pop(ctx, true))]));
+                    final confirm = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(title: const Text('Confirm Completion'), content: Text('Mark order as completed and update inventory? This cannot be undone easily.'), actions: [TextButton(child: const Text('Cancel'), onPressed: ()=>Navigator.pop(ctx, false)), TextButton(child: const Text('Complete'), onPressed: ()=>Navigator.pop(ctx, true))]));
                     if (!mounted) return; // Check after await showDialog
                     if(confirm == true) {
                       bool success = await controller.completeSelectedSalesOrder(widget.salesOrder!.id!, false);
