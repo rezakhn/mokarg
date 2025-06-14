@@ -67,7 +67,7 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> {
                 });
               },
               onDelete: (order.status != 'Completed' && order.status != 'Cancelled') ? () async {
-                final confirm = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(title: Text('Confirm Delete'), content: Text('Are you sure you want to delete Sales Order #${order.id}?'), actions: [TextButton(child: Text('Cancel'), onPressed: ()=>Navigator.pop(ctx, false)), TextButton(child: Text('Delete'), onPressed: ()=>Navigator.pop(ctx, true))]));
+                final confirm = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(title: const Text('Confirm Delete'), content: Text('Are you sure you want to delete Sales Order #${order.id}?'), actions: [TextButton(child: const Text('Cancel'), onPressed: ()=>Navigator.pop(ctx, false)), TextButton(child: const Text('Delete'), onPressed: ()=>Navigator.pop(ctx, true))]));
                 if (!mounted) return; // Check after showDialog
                 if (confirm == true) { // No need to recheck mounted if it was true for the previous check
                     bool success = await controller.deleteSalesOrder(order.id!);
