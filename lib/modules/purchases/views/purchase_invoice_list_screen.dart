@@ -56,6 +56,7 @@ class _PurchaseInvoiceListScreenState extends State<PurchaseInvoiceListScreen> {
               invoice: invoice,
               supplierName: supplierName,
               onTap: () {
+                if (!mounted) return; // Added check
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => PurchaseInvoiceEditScreen(invoice: invoice))
@@ -80,6 +81,7 @@ class _PurchaseInvoiceListScreenState extends State<PurchaseInvoiceListScreen> {
                     bool success = await controller.deletePurchaseInvoice(invoice.id!);
                     if (!mounted) return; // Check after await
                     if (!success && controller.errorMessage != null) { // No need for second mounted check
+                             if (!mounted) return; // Added check
                          ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text('Error: ${controller.errorMessage}')),
                           );
@@ -98,6 +100,7 @@ class _PurchaseInvoiceListScreenState extends State<PurchaseInvoiceListScreen> {
           icon: const Icon(Icons.add_circle_outline),
           tooltip: 'New Purchase Invoice',
           onPressed: () {
+            if (!mounted) return; // Added check
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const PurchaseInvoiceEditScreen())

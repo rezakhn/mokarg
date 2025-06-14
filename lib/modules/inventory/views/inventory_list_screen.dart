@@ -68,10 +68,12 @@ class _InventoryListScreenState extends State<InventoryListScreen> {
                   Navigator.of(dialogContext).pop(); // Pop the dialog first
 
                   if (success) {
+                    if (!mounted) return; // Added check for use_build_context_synchronously
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Threshold for ${item.itemName} updated.')),
                     );
                   } else if (controller.errorMessage != null) { // No need for !success check if success path taken
+                     if (!mounted) return; // Added check for use_build_context_synchronously
                      ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Error: ${controller.errorMessage}')),
                     );

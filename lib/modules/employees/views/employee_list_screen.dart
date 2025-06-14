@@ -73,12 +73,14 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
                     bool deleted = await controller.deleteEmployee(employee.id!);
                     if (!mounted) return; // Check after await
                     if (!deleted && controller.errorMessage != null) { // No need for second mounted here if already checked
+                      if (!mounted) return; // Added check for use_build_context_synchronously
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(controller.errorMessage!)));
                     }
                   }
               },
-              onLongPress: () {
-                  controller.selectEmployee(employee);
+              onLongPress: () async { // Changed to async
+                  await controller.selectEmployee(employee); // Added await
+                  if (!mounted) return; // Added check for use_build_context_synchronously
                   Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => WorkLogCalendarScreen(employee: employee)),
@@ -98,6 +100,7 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
           tooltip: "Add Employee",
           onSelected: (value) {
             if (value == 'add_employee') {
+                if (!mounted) return; // Added check for use_build_context_synchronously
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const EmployeeEditScreen()),

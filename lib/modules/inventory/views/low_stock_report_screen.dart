@@ -62,10 +62,12 @@ class _LowStockReportScreenState extends State<LowStockReportScreen> {
                   Navigator.of(dialogContext).pop(); // Pop the dialog first
 
                   if (success) {
+                    if (!mounted) return; // Added check for use_build_context_synchronously
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Threshold for ${item.itemName} updated.')),
                     );
                   } else if (controller.errorMessage != null) {
+                     if (!mounted) return; // Added check for use_build_context_synchronously
                      ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Error: ${controller.errorMessage}')),
                     );

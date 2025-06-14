@@ -43,6 +43,7 @@ class _PartListScreenState extends State<PartListScreen> {
               return PartCard(
                 part: part,
                 onTap: () {
+                  if (!mounted) return; // Added check
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => PartEditScreen(part: part)),
@@ -67,6 +68,7 @@ class _PartListScreenState extends State<PartListScreen> {
                     await controller.deletePart(part.id!);
                     if (!mounted) return; // Check after await
                     if (controller.errorMessage != null) { // No need for second mounted check
+                             if (!mounted) return; // Added check
                          ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text('Error: ${controller.errorMessage}')),
                           );
@@ -86,6 +88,7 @@ class _PartListScreenState extends State<PartListScreen> {
           icon: const Icon(Icons.add_circle_outline),
           tooltip: 'Add Part/Assembly',
           onPressed: () {
+            if (!mounted) return; // Added check
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const PartEditScreen()),
