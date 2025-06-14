@@ -58,6 +58,7 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> {
               order: order,
               customerName: customerName,
               onTap: () {
+                  if (!mounted) return; // Added check
                   Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => SalesOrderEditScreen(salesOrder: order)),
@@ -73,6 +74,7 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> {
                     bool success = await controller.deleteSalesOrder(order.id!);
                     if (!mounted) return; // Check after await
                     if (!success && controller.errorMessage != null) {
+                         if (!mounted) return; // Added check
                          ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text('Error: ${controller.errorMessage}')),
                           );
@@ -91,6 +93,7 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> {
           icon: const Icon(Icons.add_shopping_cart_outlined),
           tooltip: 'New Sales Order',
           onPressed: () {
+            if (!mounted) return; // Added check
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const SalesOrderEditScreen()),

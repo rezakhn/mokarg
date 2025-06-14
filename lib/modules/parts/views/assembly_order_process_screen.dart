@@ -101,9 +101,11 @@ class _AssemblyOrderProcessScreenState extends State<AssemblyOrderProcessScreen>
                       bool success = await controller.completeSelectedAssemblyOrder();
                       if (!mounted) return; // Check after await
                       if (success) { // No need for second mounted check here
+                        if (!mounted) return; // Added check
                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Assembly order completed! Inventory updated.')));
                         // UI should update due to controller notifying listeners
                       } else if (controller.errorMessage != null) { // No need for second mounted check here
+                        if (!mounted) return; // Added check
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${controller.errorMessage}')));
                       }
                     },

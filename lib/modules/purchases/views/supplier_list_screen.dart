@@ -40,6 +40,7 @@ class _SupplierListScreenState extends State<SupplierListScreen> {
             return SupplierCard(
               supplier: supplier,
               onTap: () {
+                if (!mounted) return; // Added check
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => SupplierEditScreen(supplier: supplier))
@@ -64,6 +65,7 @@ class _SupplierListScreenState extends State<SupplierListScreen> {
                     bool success = await controller.deleteSupplier(supplier.id!);
                     if (!mounted) return; // Check after await
                     if (!success && controller.errorMessage != null) { // No need for second mounted check
+                             if (!mounted) return; // Added check
                          ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text('Error: ${controller.errorMessage}')),
                           );
@@ -82,6 +84,7 @@ class _SupplierListScreenState extends State<SupplierListScreen> {
           icon: const Icon(Icons.add_circle_outline),
           tooltip: 'Add Supplier',
           onPressed: () {
+            if (!mounted) return; // Added check
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const SupplierEditScreen())

@@ -42,6 +42,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
             return CustomerCard(
               customer: customer,
               onTap: () {
+                if (!mounted) return; // Added check for use_build_context_synchronously
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => CustomerEditScreen(customer: customer)),
@@ -56,6 +57,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                     bool success = await controller.deleteCustomer(customer.id!);
                     if (!mounted) return; // Check after await
                     if (!success && controller.errorMessage != null) { // No need for second mounted here
+                         if (!mounted) return; // Added check for use_build_context_synchronously
                          ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text('Error: ${controller.errorMessage}')),
                           );
@@ -75,6 +77,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
           icon: const Icon(Icons.add_circle_outline),
           tooltip: 'Add Customer',
           onPressed: () {
+            if (!mounted) return; // Added check for use_build_context_synchronously
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const CustomerEditScreen()),

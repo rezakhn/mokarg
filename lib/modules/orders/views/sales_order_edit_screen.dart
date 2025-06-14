@@ -305,6 +305,7 @@ class _SalesOrderEditScreenState extends State<SalesOrderEditScreen> {
               }
             }
           ), // Add comma here
+          ,
         Consumer<OrderController>(builder: (ctx, ctrl, _) {
             if(ctrl.selectedSalesOrder?.id != widget.salesOrder?.id || ctrl.itemShortages.isEmpty) return SizedBox.shrink();
             return Padding(padding: EdgeInsets.symmetric(vertical:8), child: Column(
@@ -324,7 +325,7 @@ class _SalesOrderEditScreenState extends State<SalesOrderEditScreen> {
                       if (!mounted) return; // Check after await completeSelectedSalesOrder
                       if (success) {
                           setState(() => _status = "Completed");
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Order completed and inventory updated!')));
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Order completed and inventory updated!'))); // Added semicolon
                       }
                     }
                 }

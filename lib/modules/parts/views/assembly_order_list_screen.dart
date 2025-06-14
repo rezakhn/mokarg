@@ -32,6 +32,7 @@ class _AssemblyOrderListScreenState extends State<AssemblyOrderListScreen> {
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () {
+               if (!mounted) return; // Added check
                Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const AssemblyOrderEditScreen()),
@@ -62,8 +63,9 @@ class _AssemblyOrderListScreenState extends State<AssemblyOrderListScreen> {
               return AssemblyOrderCard(
                 order: order,
                 assemblyName: partName,
-                onTap: () {
-                  controller.selectAssemblyOrder(order.id!);
+                onTap: () async { // Changed to async
+                  await controller.selectAssemblyOrder(order.id!); // Added await
+                  if (!mounted) return; // Added check
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => AssemblyOrderProcessScreen(orderId: order.id!)),
@@ -89,6 +91,7 @@ class _AssemblyOrderListScreenState extends State<AssemblyOrderListScreen> {
                         await controller.deleteAssemblyOrder(order.id!);
                         if (!mounted) return; // Check after await
                         if (controller.errorMessage != null) { // mounted is already checked
+                            if (!mounted) return; // Added check
                             ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(content: Text('Error: ${controller.errorMessage}')),
                             );
@@ -96,6 +99,7 @@ class _AssemblyOrderListScreenState extends State<AssemblyOrderListScreen> {
                     }
                 } : null,
                 onLongPress: order.status != 'Completed' ? () {
+                    if (!mounted) return; // Added check
                     Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) => AssemblyOrderEditScreen(order: order)),

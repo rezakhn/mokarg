@@ -30,6 +30,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () {
+               if (!mounted) return; // Added check
                Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const ProductEditScreen()),
@@ -59,6 +60,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
               return ProductCard(
                 product: product,
                 onTap: () {
+                  if (!mounted) return; // Added check
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => ProductEditScreen(product: product)),
@@ -84,6 +86,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                         await controller.deleteProduct(product.id!);
                         if (!mounted) return; // Check after await
                         if (controller.errorMessage != null) { // mounted is already checked
+                            if (!mounted) return; // Added check
                             ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(content: Text('Error: ${controller.errorMessage}')),
                             );
