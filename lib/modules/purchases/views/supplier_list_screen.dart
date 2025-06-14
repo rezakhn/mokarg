@@ -52,11 +52,11 @@ class _SupplierListScreenState extends State<SupplierListScreen> {
                 final confirm = await showDialog<bool>(
                   context: context,
                   builder: (ctx) => AlertDialog(
-                    title: Text('Confirm Delete'),
+                    title: const Text('Confirm Delete'),
                     content: Text('Are you sure you want to delete ${supplier.name}? This may fail if the supplier has associated invoices.'),
                     actions: [
-                      TextButton(child: Text('Cancel'), onPressed: ()=>Navigator.pop(ctx, false)),
-                      TextButton(child: Text('Delete'), onPressed: ()=>Navigator.pop(ctx, true))
+                      TextButton(child: const Text('Cancel'), onPressed: ()=>Navigator.pop(ctx, false)),
+                      TextButton(child: const Text('Delete'), onPressed: ()=>Navigator.pop(ctx, true))
                     ]
                   )
                 );
