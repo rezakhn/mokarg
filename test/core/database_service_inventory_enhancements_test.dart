@@ -52,7 +52,7 @@ void main() {
   }
 
 
-  test('getAllInventoryItems fetches all items, optionally filtered', async () {
+  test('getAllInventoryItems fetches all items, optionally filtered', () async {
     await upsertInventoryItem(dbService, InventoryItem(itemName: 'Apple', quantity: 10, threshold: 2));
     await upsertInventoryItem(dbService, InventoryItem(itemName: 'Banana', quantity: 5, threshold: 3));
     await upsertInventoryItem(dbService, InventoryItem(itemName: 'Apricot', quantity: 8, threshold: 4));
@@ -66,7 +66,7 @@ void main() {
     expect(filteredItems.any((i) => i.itemName == 'Apricot'), isTrue);
   });
 
-  test('updateInventoryItemThreshold updates only the threshold', async () {
+  test('updateInventoryItemThreshold updates only the threshold', () async {
     await upsertInventoryItem(dbService, InventoryItem(itemName: 'TestItem', quantity: 50, threshold: 10));
 
     int changes = await dbService.updateInventoryItemThreshold('TestItem', 15);
@@ -81,7 +81,7 @@ void main() {
 
   });
 
-  test('manuallyAdjustInventoryItemQuantity upserts quantity and optionally threshold', async () {
+  test('manuallyAdjustInventoryItemQuantity upserts quantity and optionally threshold', () async {
     // Test update existing
     await upsertInventoryItem(dbService, InventoryItem(itemName: 'ManualItem', quantity: 20, threshold: 5));
     await dbService.manuallyAdjustInventoryItemQuantity('ManualItem', 25, newThreshold: 7);

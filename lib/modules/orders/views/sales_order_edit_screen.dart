@@ -304,8 +304,7 @@ class _SalesOrderEditScreenState extends State<SalesOrderEditScreen> {
                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("All items in stock!")));
               }
             }
-          ), // Add comma here
-          ,
+          ), // Add comma here ,
         Consumer<OrderController>(builder: (ctx, ctrl, _) {
             if(ctrl.selectedSalesOrder?.id != widget.salesOrder?.id || ctrl.itemShortages.isEmpty) return SizedBox.shrink();
             return Padding(padding: EdgeInsets.symmetric(vertical:8), child: Column(
