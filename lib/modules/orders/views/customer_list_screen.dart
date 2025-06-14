@@ -51,7 +51,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                 });
               },
               onDelete: () async {
-                final confirm = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(title: Text('Confirm Delete'), content: Text('Are you sure you want to delete ${customer.name}? This may fail if the customer has existing sales orders.'), actions: [TextButton(child: Text('Cancel'), onPressed: ()=>Navigator.pop(ctx, false)), TextButton(child: Text('Delete'), onPressed: ()=>Navigator.pop(ctx, true))]));
+                final confirm = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(title: const Text('Confirm Delete'), content: Text('Are you sure you want to delete ${customer.name}? This may fail if the customer has existing sales orders.'), actions: [TextButton(child: const Text('Cancel'), onPressed: ()=>Navigator.pop(ctx, false)), TextButton(child: const Text('Delete'), onPressed: ()=>Navigator.pop(ctx, true))]));
                 if (confirm == true && mounted) { // Good initial check
                     bool success = await controller.deleteCustomer(customer.id!);
                     if (!mounted) return; // Check after await

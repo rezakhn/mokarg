@@ -68,11 +68,11 @@ class _PurchaseInvoiceListScreenState extends State<PurchaseInvoiceListScreen> {
                 final confirm = await showDialog<bool>(
                   context: context,
                   builder: (ctx) => AlertDialog(
-                    title: Text('Confirm Delete'),
+                    title: const Text('Confirm Delete'),
                     content: Text('Are you sure you want to delete Purchase Invoice #${invoice.id}?'),
                     actions: [
-                      TextButton(child: Text('Cancel'), onPressed: ()=>Navigator.pop(ctx, false)),
-                      TextButton(child: Text('Delete'), onPressed: ()=>Navigator.pop(ctx, true))
+                      TextButton(child: const Text('Cancel'), onPressed: ()=>Navigator.pop(ctx, false)),
+                      TextButton(child: const Text('Delete'), onPressed: ()=>Navigator.pop(ctx, true))
                     ]
                   )
                 );
